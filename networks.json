@@ -1,8 +1,0 @@
-{
-  "arbitrum-one": {
-    "BondPositionManager": {
-      "address": "0xD90710a840441D7249dEF543c4BA2d24DC62BecC",
-      "startBlock": 121839758
-    }
-  }
-}

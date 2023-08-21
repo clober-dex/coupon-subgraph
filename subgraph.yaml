@@ -4,7 +4,7 @@ schema:
 dataSources:
   - kind: ethereum
     name: BondPositionManager
-    network: arbitrum-one
+    network: localhost
     source:
       address: "0xD90710a840441D7249dEF543c4BA2d24DC62BecC"
       abi: BondPositionManager
@@ -14,29 +14,19 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - Approval
-        - ApprovalForAll
-        - AssetRegistered
-        - EIP712DomainChanged
-        - OwnershipTransferred
-        - PositionUpdated
-        - Transfer
+        - Token
       abis:
         - name: BondPositionManager
           file: ./abis/BondPositionManager.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
+        - name: Substitute
+          file: ./abis/Substitute.json
       eventHandlers:
-        - event: Approval(indexed address,indexed address,indexed uint256)
-          handler: handleApproval
-        - event: ApprovalForAll(indexed address,indexed address,bool)
-          handler: handleApprovalForAll
         - event: AssetRegistered(indexed address)
           handler: handleAssetRegistered
-        - event: EIP712DomainChanged()
-          handler: handleEIP712DomainChanged
-        - event: OwnershipTransferred(indexed address,indexed address)
-          handler: handleOwnershipTransferred
-        - event: PositionUpdated(indexed uint256,uint256,uint8)
-          handler: handlePositionUpdated
-        - event: Transfer(indexed address,indexed address,indexed uint256)
-          handler: handleTransfer
       file: ./src/bond-position-manager.ts

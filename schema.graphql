@@ -1,6 +1,22 @@
-type ExampleEntity @entity {
-  id: Bytes!
-  count: BigInt!
-  owner: Bytes! # address
-  approved: Bytes! # address
+type Asset @entity {
+  id: ID!
+  # token symbol
+  symbol: String!
+  # token name
+  name: String!
+  # token decimals
+  decimals: BigInt!
+
+  underlying: [Token!]! @derivedFrom(field: "asset")
+}
+
+type Token @entity {
+  id: ID!
+  asset: Asset!
+  # token symbol
+  symbol: String!
+  # token name
+  name: String!
+  # token decimals
+  decimals: BigInt!
 }
