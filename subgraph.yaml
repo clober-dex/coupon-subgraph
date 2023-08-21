@@ -1,0 +1,42 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: BondPositionManager
+    network: arbitrum-one
+    source:
+      address: "0xD90710a840441D7249dEF543c4BA2d24DC62BecC"
+      abi: BondPositionManager
+      startBlock: 121839758
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - ApprovalForAll
+        - AssetRegistered
+        - EIP712DomainChanged
+        - OwnershipTransferred
+        - PositionUpdated
+        - Transfer
+      abis:
+        - name: BondPositionManager
+          file: ./abis/BondPositionManager.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,indexed uint256)
+          handler: handleApproval
+        - event: ApprovalForAll(indexed address,indexed address,bool)
+          handler: handleApprovalForAll
+        - event: AssetRegistered(indexed address)
+          handler: handleAssetRegistered
+        - event: EIP712DomainChanged()
+          handler: handleEIP712DomainChanged
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: PositionUpdated(indexed uint256,uint256,uint8)
+          handler: handlePositionUpdated
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+      file: ./src/bond-position-manager.ts
