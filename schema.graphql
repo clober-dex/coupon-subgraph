@@ -1,22 +1,17 @@
-type Asset @entity {
+type Substitute @entity {
   id: ID!
-  # token symbol
   symbol: String!
-  # token name
   name: String!
-  # token decimals
   decimals: BigInt!
 
-  underlying: [Token!]! @derivedFrom(field: "asset")
+  underlying: Token!
 }
 
 type Token @entity {
   id: ID!
-  asset: Asset!
-  # token symbol
   symbol: String!
-  # token name
   name: String!
-  # token decimals
   decimals: BigInt!
+
+  substitutes: [Substitute!]! @derivedFrom(field: "underlying")
 }

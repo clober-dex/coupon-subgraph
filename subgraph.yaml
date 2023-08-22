@@ -28,5 +28,5 @@ dataSources:
           file: ./abis/Substitute.json
       eventHandlers:
         - event: RegisterAsset(indexed address)
-          handler: handleAssetRegistered
+          handler: handleRegisterAsset
       file: ./src/bond-position-manager.ts
