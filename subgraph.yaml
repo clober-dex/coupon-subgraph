@@ -6,9 +6,9 @@ dataSources:
     name: BondPositionManager
     network: localhost
     source:
-      address: "0xD90710a840441D7249dEF543c4BA2d24DC62BecC"
+      address: "0x00644a534bDea310ee2FCCF1c2821Df769A0b12F"
       abi: BondPositionManager
-      startBlock: 121839758
+      startBlock: 121839743
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -27,6 +27,6 @@ dataSources:
         - name: Substitute
           file: ./abis/Substitute.json
       eventHandlers:
-        - event: AssetRegistered(indexed address)
+        - event: RegisterAsset(indexed address)
           handler: handleAssetRegistered
       file: ./src/bond-position-manager.ts
