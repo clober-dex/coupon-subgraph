@@ -1,30 +1,68 @@
+import { log } from '@graphprotocol/graph-ts'
+
 import { RegisterAsset } from '../generated/BondPositionManager/BondPositionManager'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
-import { Substitute, Token } from '../generated/schema'
+import { Asset, Token } from '../generated/schema'
+import { SetLoanConfiguration } from '../generated/BondPositionManager/LoanPositionManager'
 
 import { fetchTokenDecimals, fetchTokenName, fetchTokenSymbol } from './helpers'
 
 export function handleRegisterAsset(event: RegisterAsset): void {
   const substituteAddress = event.params.asset
-  const substituteContract = AssetContract.bind(substituteAddress)
-  const underlyingToken = substituteContract.underlyingToken()
+  const underlyingAddress =
+    AssetContract.bind(substituteAddress).underlyingToken()
 
-  let token = Token.load(underlyingToken.toHexString())
-  if (token === null) {
-    token = new Token(underlyingToken.toHexString())
-    token.symbol = fetchTokenSymbol(underlyingToken)
-    token.name = fetchTokenName(underlyingToken)
-    token.decimals = fetchTokenDecimals(underlyingToken)
-    token.save()
+  let underlying = Token.load(underlyingAddress.toHexString())
+  if (underlying === null) {
+    underlying = new Token(underlyingAddress.toHexString())
+    underlying.symbol = fetchTokenSymbol(underlyingAddress)
+    underlying.name = fetchTokenName(underlyingAddress)
+    underlying.decimals = fetchTokenDecimals(underlyingAddress)
+    underlying.save()
   }
 
-  let substitute = Substitute.load(substituteAddress.toHexString())
+  let substitute = Token.load(substituteAddress.toHexString())
   if (substitute === null) {
-    substitute = new Substitute(substituteAddress.toHexString())
+    substitute = new Token(substituteAddress.toHexString())
     substitute.symbol = fetchTokenSymbol(substituteAddress)
     substitute.name = fetchTokenName(substituteAddress)
     substitute.decimals = fetchTokenDecimals(substituteAddress)
-    substitute.underlying = underlyingToken.toHexString()
     substitute.save()
   }
+
+  let asset = Asset.load(underlyingAddress.toHexString())
+  if (asset === null) {
+    asset = new Asset(underlyingAddress.toHexString())
+    asset.underlying = underlyingAddress.toHexString()
+    asset.substitutes = []
+    asset.collaterals = []
+  }
+  asset.substitutes = asset.substitutes.concat([substitute.id])
+  asset.save()
+}
+
+export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
+  const collateralAddress = event.params.collateral
+  let collateral = Token.load(collateralAddress.toHexString())
+  if (collateral === null) {
+    collateral = new Token(collateralAddress.toHexString())
+    collateral.symbol = fetchTokenSymbol(collateralAddress)
+    collateral.name = fetchTokenName(collateralAddress)
+    collateral.decimals = fetchTokenDecimals(collateralAddress)
+    collateral.save()
+  }
+
+  const substituteAddress = event.params.debt
+  const underlyingAddress =
+    AssetContract.bind(substituteAddress).underlyingToken()
+
+  let asset = Asset.load(underlyingAddress.toHexString())
+  if (asset === null) {
+    asset = new Asset(underlyingAddress.toHexString())
+    asset.underlying = underlyingAddress.toHexString()
+    asset.substitutes = []
+    asset.collaterals = []
+  }
+  asset.collaterals = asset.collaterals.concat([collateral.id])
+  asset.save()
 }

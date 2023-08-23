@@ -18,6 +18,35 @@ dataSources:
       abis:
         - name: BondPositionManager
           file: ./abis/BondPositionManager.json
+        - name: Substitute
+          file: ./abis/Substitute.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
+      eventHandlers:
+        - event: RegisterAsset(indexed address)
+          handler: handleRegisterAsset
+      file: ./src/bond-position-manager.ts
+
+  - kind: ethereum
+    name: LoanPositionManager
+    network: localhost
+    source:
+      address: "0xE0dBCB42CCAc63C949cE3EF879A647DDb662916d"
+      abi: LoanPositionManager
+      startBlock: 121839744
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Token
+      abis:
+        - name: LoanPositionManager
+          file: ./abis/LoanPositionManager.json
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes
@@ -27,6 +56,6 @@ dataSources:
         - name: Substitute
           file: ./abis/Substitute.json
       eventHandlers:
-        - event: RegisterAsset(indexed address)
-          handler: handleRegisterAsset
+        - event: SetLoanConfiguration(indexed address,indexed address,uint32,uint32,uint32,uint32)
+          handler: handleSetLoanConfiguration
       file: ./src/bond-position-manager.ts

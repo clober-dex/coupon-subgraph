@@ -1,17 +1,13 @@
-type Substitute @entity {
-  id: ID!
-  symbol: String!
-  name: String!
-  decimals: BigInt!
-
-  underlying: Token!
-}
-
 type Token @entity {
   id: ID!
   symbol: String!
   name: String!
   decimals: BigInt!
+}
 
-  substitutes: [Substitute!]! @derivedFrom(field: "underlying")
+type Asset @entity {
+  id: ID!
+  underlying: Token!
+  collaterals: [Token!]!
+  substitutes: [Token!]!
 }
