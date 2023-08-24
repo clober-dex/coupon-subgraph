@@ -3,6 +3,7 @@ import { BigInt, Address } from '@graphprotocol/graph-ts'
 import { ERC20 } from '../generated/BondPositionManager/ERC20'
 import { ERC20SymbolBytes } from '../generated/BondPositionManager/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../generated/BondPositionManager/ERC20NameBytes'
+import { Asset, Token } from '../generated/schema'
 
 export function isNullEthValue(value: string): boolean {
   return (
@@ -64,4 +65,27 @@ export function fetchTokenDecimals(tokenAddress: Address): BigInt {
     decimalValue = decimalResult.value
   }
   return BigInt.fromI32(decimalValue as i32)
+}
+
+export function createToken(tokenAddress: Address): Token {
+  let token = Token.load(tokenAddress.toHexString())
+  if (token === null) {
+    token = new Token(tokenAddress.toHexString())
+    token.symbol = fetchTokenSymbol(tokenAddress)
+    token.name = fetchTokenName(tokenAddress)
+    token.decimals = fetchTokenDecimals(tokenAddress)
+    token.save()
+  }
+  return token
+}
+
+export function createAsset(assetAddress: Address): Asset {
+  let asset = Asset.load(assetAddress.toHexString())
+  if (asset === null) {
+    asset = new Asset(assetAddress.toHexString())
+    asset.underlying = assetAddress.toHexString()
+    asset.substitutes = []
+    asset.collaterals = []
+  }
+  return asset
 }
