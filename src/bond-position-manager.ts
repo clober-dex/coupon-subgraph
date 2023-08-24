@@ -1,5 +1,3 @@
-import { log } from '@graphprotocol/graph-ts'
-
 import { RegisterAsset } from '../generated/BondPositionManager/BondPositionManager'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
 import { Asset, Token } from '../generated/schema'
@@ -43,12 +41,14 @@ export function handleRegisterAsset(event: RegisterAsset): void {
 
 export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
   const collateralAddress = event.params.collateral
-  let collateral = Token.load(collateralAddress.toHexString())
+  const collateralUnderlyingAddress =
+    AssetContract.bind(collateralAddress).underlyingToken()
+  let collateral = Token.load(collateralUnderlyingAddress.toHexString())
   if (collateral === null) {
-    collateral = new Token(collateralAddress.toHexString())
-    collateral.symbol = fetchTokenSymbol(collateralAddress)
-    collateral.name = fetchTokenName(collateralAddress)
-    collateral.decimals = fetchTokenDecimals(collateralAddress)
+    collateral = new Token(collateralUnderlyingAddress.toHexString())
+    collateral.symbol = fetchTokenSymbol(collateralUnderlyingAddress)
+    collateral.name = fetchTokenName(collateralUnderlyingAddress)
+    collateral.decimals = fetchTokenDecimals(collateralUnderlyingAddress)
     collateral.save()
   }
 
