@@ -11,3 +11,34 @@ type Asset @entity {
   collaterals: [Token!]!
   substitutes: [Token!]!
 }
+
+type Market @entity {
+  # market address
+  id: ID!
+  orderToken: Bytes!
+  quoteToken: Token!
+  baseToken: Token!
+  quoteUnit: BigInt!
+  makerFee: BigInt!
+  takerFee: BigInt!
+  a: BigInt!
+  r: BigInt!
+  d: BigInt!
+
+  epoch: BigInt!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+
+  depths: [Depth!]! @derivedFrom(field: "market")
+}
+
+type Depth @entity {
+  # market address + "-" + priceIndex + "-" + isBid in swaps Transaction array
+  id: ID!
+  market: Market!
+  priceIndex: BigInt!
+  price: BigInt!
+  isBid: Boolean!
+  rawAmount: BigInt!
+  baseAmount: BigInt!
+}

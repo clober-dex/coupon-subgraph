@@ -4,6 +4,9 @@ import { ERC20 } from '../generated/BondPositionManager/ERC20'
 import { ERC20SymbolBytes } from '../generated/BondPositionManager/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../generated/BondPositionManager/ERC20NameBytes'
 import { Asset, Token } from '../generated/schema'
+import { Wrapped1155Metadata } from '../generated/MarketFactory/Wrapped1155Metadata'
+
+export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
 export function isNullEthValue(value: string): boolean {
   return (
@@ -88,4 +91,31 @@ export function createAsset(assetAddress: Address): Asset {
     asset.collaterals = []
   }
   return asset
+}
+
+export function getEpochIndex(couponAddress: Address): BigInt {
+  const couponContract = Wrapped1155Metadata.bind(couponAddress)
+  const couponId = couponContract.try_tokenId()
+  if (couponId.reverted) {
+    return BigInt.fromI64(0)
+  }
+  return couponId.value.rightShift(160)
+}
+
+export function getStartTimestamp(epochIndex: BigInt): BigInt {
+  const _epochIndex = epochIndex.toU64()
+  const startYear = (1970 + _epochIndex / 2).toString()
+  const startQuarter = _epochIndex % 2 ? '01-01' : '07-01'
+  const startDate = Date.fromString(startYear.concat('-').concat(startQuarter))
+
+  return BigInt.fromI64(startDate.getTime() / 1000)
+}
+
+export function getEndTimestamp(epochIndex: BigInt): BigInt {
+  const _epochIndex = epochIndex.toU64()
+  const endYear = (1970 + (_epochIndex + 1) / 2).toString()
+  const endQuarter = (_epochIndex + 1) % 2 ? '01-01' : '07-01'
+  const endDate = Date.fromString(endYear.concat('-').concat(endQuarter))
+
+  return BigInt.fromI64(endDate.getTime() / 1000)
 }
