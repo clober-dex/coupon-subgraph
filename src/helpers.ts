@@ -86,10 +86,6 @@ export function createAsset(assetAddress: Address): Asset {
   let asset = Asset.load(assetAddress.toHexString())
   if (asset === null) {
     asset = new Asset(assetAddress.toHexString())
-    const DOMAIN_SEPARATOR = ERC20.bind(assetAddress).try_DOMAIN_SEPARATOR()
-    if (!DOMAIN_SEPARATOR.reverted) {
-      asset.domainSeparator = DOMAIN_SEPARATOR.value
-    }
     asset.underlying = assetAddress.toHexString()
     asset.substitutes = []
     asset.collaterals = []

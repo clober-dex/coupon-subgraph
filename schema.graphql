@@ -10,7 +10,6 @@ type Asset @entity {
   underlying: Token!
   collaterals: [Token!]!
   substitutes: [Token!]!
-  domainSeparator: Bytes
 }
 
 type Market @entity {
