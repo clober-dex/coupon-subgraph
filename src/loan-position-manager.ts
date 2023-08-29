@@ -1,7 +1,7 @@
 import { Address } from '@graphprotocol/graph-ts'
 
-import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
-import { SetLoanConfiguration } from '../generated/BondPositionManager/LoanPositionManager'
+import { SetLoanConfiguration } from '../generated/LoanPositionManager/LoanPositionManager'
+import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
 
 import { createAsset, createToken } from './helpers'
 

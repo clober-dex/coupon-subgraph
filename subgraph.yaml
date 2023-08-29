@@ -21,12 +21,6 @@ dataSources:
           file: ./abis/BondPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
-        - name: ERC20
-          file: ./abis/ERC20.json
-        - name: ERC20SymbolBytes
-          file: ./abis/ERC20SymbolBytes.json
-        - name: ERC20NameBytes
-          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: RegisterAsset(indexed address)
           handler: handleRegisterAsset
@@ -48,12 +42,6 @@ dataSources:
       abis:
         - name: LoanPositionManager
           file: ./abis/LoanPositionManager.json
-        - name: ERC20
-          file: ./abis/ERC20.json
-        - name: ERC20SymbolBytes
-          file: ./abis/ERC20SymbolBytes.json
-        - name: ERC20NameBytes
-          file: ./abis/ERC20NameBytes.json
         - name: Substitute
           file: ./abis/Substitute.json
       eventHandlers:

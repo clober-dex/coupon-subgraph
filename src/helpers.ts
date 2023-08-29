@@ -1,10 +1,10 @@
 import { BigInt, Address } from '@graphprotocol/graph-ts'
 
-import { ERC20 } from '../generated/BondPositionManager/ERC20'
-import { ERC20SymbolBytes } from '../generated/BondPositionManager/ERC20SymbolBytes'
-import { ERC20NameBytes } from '../generated/BondPositionManager/ERC20NameBytes'
 import { Asset, Token } from '../generated/schema'
 import { Wrapped1155Metadata } from '../generated/MarketFactory/Wrapped1155Metadata'
+import { ERC20 } from '../generated/MarketFactory/ERC20'
+import { ERC20SymbolBytes } from '../generated/MarketFactory/ERC20SymbolBytes'
+import { ERC20NameBytes } from '../generated/MarketFactory/ERC20NameBytes'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
