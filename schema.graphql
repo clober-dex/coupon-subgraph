@@ -12,6 +12,17 @@ type Asset @entity {
   substitutes: [Token!]!
 }
 
+type BondPosition @entity {
+  id: ID! # token id
+  user: String!
+  amount: BigInt!
+  substitute: Token!
+  expiredEpoch: BigInt!
+}
+
+
+# Clober
+
 type Market @entity {
   # market address
   id: ID!

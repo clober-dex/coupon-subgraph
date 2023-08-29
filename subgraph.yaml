@@ -31,6 +31,10 @@ dataSources:
       eventHandlers:
         - event: RegisterAsset(indexed address)
           handler: handleRegisterAsset
+        - event: UpdatePosition(indexed uint256,uint256,uint8)
+          handler: handleUpdateBondPosition
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleBondPositionTransfer
       file: ./src/bond-position-manager.ts
   - kind: ethereum
     name: LoanPositionManager

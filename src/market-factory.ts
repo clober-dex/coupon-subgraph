@@ -16,9 +16,7 @@ import {
   getEpochIndex,
   getStartTimestamp,
 } from './helpers'
-
-const COUPON_MARKET_DEPLOYER_ADDRESS =
-  '0xa0e3174f4d222c5cbf705a138c6a9369935eed81' // TODO: Update this
+import { COUPON_MARKET_DEPLOYER_ADDRESS } from './addresses'
 
 export function handleCreateStableMarket(event: CreateStableMarket): void {
   const epochIndex = getEpochIndex(event.params.baseToken)
