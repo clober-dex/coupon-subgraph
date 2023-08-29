@@ -21,6 +21,13 @@ dataSources:
           file: ./abis/BondPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
+
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: RegisterAsset(indexed address)
           handler: handleRegisterAsset
@@ -44,6 +51,13 @@ dataSources:
           file: ./abis/LoanPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
+
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: SetLoanConfiguration(indexed address,indexed
             address,uint32,uint32,uint32,uint32)
@@ -70,18 +84,19 @@ dataSources:
       abis:
         - name: MarketFactory
           file: ./abis/MarketFactory.json
-        - name: ERC20
-          file: ./abis/ERC20.json
-        - name: ERC20SymbolBytes
-          file: ./abis/ERC20SymbolBytes.json
-        - name: ERC20NameBytes
-          file: ./abis/ERC20NameBytes.json
         - name: OrderNFT
           file: ./abis/OrderNFT.json
         - name: OrderBook
           file: ./abis/OrderBook.json
         - name: Wrapped1155Metadata
           file: ./abis/Wrapped1155Metadata.json
+
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
       eventHandlers:
         - event: CreateStableMarket(indexed
             address,address,address,address,uint256,uint256,int24,uint24,uint128,uint128)
