@@ -45,6 +45,9 @@ function updateBondPosition(tokenId: BigInt): BondPosition {
     BigInt.fromI32(position.expiredWith),
   )
   bondPosition.substitute = position.asset.toHexString()
+  bondPosition.underlying = AssetContract.bind(position.asset)
+    .underlyingToken()
+    .toHexString()
   bondPosition.save()
   return bondPosition as BondPosition
 }
