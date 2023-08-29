@@ -9,7 +9,12 @@ import {
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
 import { BondPosition } from '../generated/schema'
 
-import { ADDRESS_ZERO, createAsset, createToken } from './helpers'
+import {
+  ADDRESS_ZERO,
+  createAsset,
+  createToken,
+  getEndTimestamp,
+} from './helpers'
 import { BOND_POSITION_MANAGER_ADDRESS } from './addresses'
 
 export function handleRegisterAsset(event: RegisterAsset): void {
@@ -36,6 +41,9 @@ function updateBondPosition(tokenId: BigInt): BondPosition {
   bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
   bondPosition.amount = position.amount
   bondPosition.expiryEpoch = BigInt.fromI32(position.expiredWith)
+  bondPosition.expiryTimestamp = getEndTimestamp(
+    BigInt.fromI32(position.expiredWith),
+  )
   bondPosition.substitute = position.asset.toHexString()
   bondPosition.save()
   return bondPosition as BondPosition
