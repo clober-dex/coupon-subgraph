@@ -104,8 +104,8 @@ export function getEpochIndex(couponAddress: Address): BigInt {
 
 export function getStartTimestamp(epochIndex: BigInt): BigInt {
   const _epochIndex = epochIndex.toU64()
-  const startYear = (1970 + (_epochIndex - 1) / 2).toString()
-  const startQuarter = _epochIndex % 2 ? '01-01' : '07-01'
+  const startYear = (1970 + _epochIndex / 2).toString()
+  const startQuarter = _epochIndex % 2 ? '07-01' : '01-01'
   const startDate = Date.fromString(startYear.concat('-').concat(startQuarter))
 
   return BigInt.fromI64(startDate.getTime() / 1000)
