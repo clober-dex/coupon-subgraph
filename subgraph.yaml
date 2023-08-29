@@ -60,7 +60,11 @@ dataSources:
         - event: SetLoanConfiguration(indexed address,indexed
             address,uint32,uint32,uint32,uint32)
           handler: handleSetLoanConfiguration
-      file: ./src/bond-position-manager.ts
+      file: ./src/loan-position-manager.ts
+
+
+
+# Clober Subgraph
   - kind: ethereum
     name: MarketFactory
     network: localhost
