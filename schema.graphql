@@ -8,8 +8,15 @@ type Token @entity {
 type Asset @entity {
   id: ID!
   underlying: Token!
-  collaterals: [Token!]!
+  collaterals: [Collateral!]!
   substitutes: [Token!]!
+}
+
+type Collateral @entity {
+  id: ID!
+  liquidationThreshold: BigInt!
+  liquidationTargetLtv: BigInt!
+  underlying: Token!
 }
 
 type BondPosition @entity {
@@ -17,7 +24,7 @@ type BondPosition @entity {
   user: String!
   amount: BigInt!
   substitute: Token!
-  expiredEpoch: BigInt!
+  expiryEpoch: BigInt!
 }
 
 

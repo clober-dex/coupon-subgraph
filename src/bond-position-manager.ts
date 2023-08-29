@@ -35,7 +35,7 @@ function updateBondPosition(tokenId: BigInt): BondPosition {
   const position = bondPositionManager.getPosition(tokenId)
   bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
   bondPosition.amount = position.amount
-  bondPosition.expiredEpoch = BigInt.fromI32(position.expiredWith)
+  bondPosition.expiryEpoch = BigInt.fromI32(position.expiredWith)
   bondPosition.substitute = position.asset.toHexString()
   bondPosition.save()
   return bondPosition as BondPosition
