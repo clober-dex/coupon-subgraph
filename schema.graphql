@@ -22,9 +22,8 @@ type AssetStatus @entity {
   id: ID! # ${address}-${epoch}
   asset: Asset!
   epoch: Epoch!
+  market: Market!
   totalDeposits: BigInt!
-  totalAvailable: BigInt!
-  bestCouponPrice: BigInt!
 }
 
 type Collateral @entity {

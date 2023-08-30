@@ -1,4 +1,4 @@
-import { Address, BigInt, store, ethereum } from '@graphprotocol/graph-ts'
+import { Address, BigInt, store, ethereum, log } from '@graphprotocol/graph-ts'
 
 import {
   BondPositionManager as BondPositionManagerContract,
@@ -8,16 +8,17 @@ import {
 } from '../generated/BondPositionManager/BondPositionManager'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
-import { BondPosition } from '../generated/schema'
-
+import { AssetStatus, BondPosition, Market } from '../generated/schema'
 import {
-  ADDRESS_ZERO,
-  createAsset,
-  createEpoch,
-  createToken,
-  getEpochIndexByTimestamp,
-} from './helpers'
-import { BOND_POSITION_MANAGER_ADDRESS } from './addresses'
+  DepositController as DepositControllerContract,
+  DepositController__getCouponMarketInputCouponKeyStruct,
+} from '../generated/BondPositionManager/DepositController'
+
+import { ADDRESS_ZERO, createAsset, createEpoch, createToken } from './helpers'
+import {
+  BOND_POSITION_MANAGER_ADDRESS,
+  DEPOSIT_CONTROLLER_ADDRESS,
+} from './addresses'
 
 export function handleRegisterAsset(event: RegisterAsset): void {
   const substitute = createToken(event.params.asset)
@@ -66,7 +67,9 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
   let bondPosition = BondPosition.load(tokenId.toString())
   if (bondPosition === null) {
     bondPosition = new BondPosition(tokenId.toString())
+    bondPosition.principal = BigInt.zero()
   }
+  const previousPrincipal = bondPosition.principal
   bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
   bondPosition.amount = event.params.amount
   bondPosition.principal = event.params.amount
@@ -81,6 +84,31 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     .underlyingToken()
     .toHexString()
   bondPosition.save()
+
+  const couponKey = buildCouponKey(
+    position.asset,
+    BigInt.fromI32(position.expiredWith),
+  )
+  const depositControllerContract = DepositControllerContract.bind(
+    Address.fromString(DEPOSIT_CONTROLLER_ADDRESS),
+  )
+  const marketAddress = depositControllerContract.getCouponMarket(couponKey)
+  const assetStatusKey = bondPosition.underlying
+    .concat('-')
+    .concat(bondPosition.toEpoch)
+  let assetStatus = AssetStatus.load(assetStatusKey)
+  if (assetStatus === null) {
+    assetStatus = new AssetStatus(assetStatusKey)
+    assetStatus.asset = bondPosition.underlying
+    assetStatus.epoch = bondPosition.toEpoch
+    assetStatus.market = marketAddress.toHexString()
+    assetStatus.totalDeposits = bondPosition.principal
+  } else {
+    assetStatus.totalDeposits = assetStatus.totalDeposits
+      .plus(bondPosition.principal)
+      .minus(previousPrincipal)
+  }
+  assetStatus.save()
 }
 
 export function handleBondPositionTransfer(event: Transfer): void {
@@ -101,4 +129,17 @@ export function handleBondPositionTransfer(event: Transfer): void {
   } else {
     bondPosition.save()
   }
+}
+
+function buildCouponKey(
+  asset: Address,
+  epoch: BigInt,
+): DepositController__getCouponMarketInputCouponKeyStruct {
+  const fixedSizedArray: Array<ethereum.Value> = [
+    ethereum.Value.fromAddress(asset),
+    ethereum.Value.fromUnsignedBigInt(epoch),
+  ]
+  return changetype<DepositController__getCouponMarketInputCouponKeyStruct>(
+    fixedSizedArray,
+  )
 }
