@@ -23,6 +23,7 @@ type BondPosition @entity {
   id: ID! # token id
   user: String!
   amount: BigInt!
+  principal: BigInt!
   substitute: Token!
   underlying: Token!
   startEpoch: BigInt!

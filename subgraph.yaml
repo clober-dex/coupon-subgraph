@@ -21,6 +21,8 @@ dataSources:
           file: ./abis/BondPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
+        - name: OrderBook
+          file: ./abis/OrderBook.json
 
         - name: ERC20
           file: ./abis/ERC20.json
@@ -33,6 +35,7 @@ dataSources:
           handler: handleRegisterAsset
         - event: UpdatePosition(indexed uint256,uint256,uint8)
           handler: handleUpdateBondPosition
+          receipt: true
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleBondPositionTransfer
       file: ./src/bond-position-manager.ts
