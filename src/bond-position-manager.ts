@@ -13,10 +13,9 @@ import { BondPosition } from '../generated/schema'
 import {
   ADDRESS_ZERO,
   createAsset,
+  createEpoch,
   createToken,
-  getEndTimestamp,
   getEpochIndexByTimestamp,
-  getStartTimestamp,
 } from './helpers'
 import { BOND_POSITION_MANAGER_ADDRESS } from './addresses'
 
@@ -69,19 +68,14 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     bondPosition = new BondPosition(tokenId.toString())
   }
   bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
-  const position = bondPositionManager.getPosition(tokenId)
-  const currentEpochIndex = getEpochIndexByTimestamp(event.block.timestamp)
-
   bondPosition.amount = event.params.amount
   bondPosition.principal = event.params.amount
     .minus(soldAmount)
     .plus(boughtAmount)
-  bondPosition.startEpoch = currentEpochIndex
-  bondPosition.startTimestamp = getStartTimestamp(currentEpochIndex)
-  bondPosition.expiryEpoch = BigInt.fromI32(position.expiredWith)
-  bondPosition.expiryTimestamp = getEndTimestamp(
-    BigInt.fromI32(position.expiredWith),
-  )
+
+  const position = bondPositionManager.getPosition(tokenId)
+  bondPosition.fromEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
+  bondPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
   bondPosition.substitute = position.asset.toHexString()
   bondPosition.underlying = AssetContract.bind(position.asset)
     .underlyingToken()

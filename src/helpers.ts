@@ -1,6 +1,6 @@
 import { BigInt, Address } from '@graphprotocol/graph-ts'
 
-import { Asset, Token } from '../generated/schema'
+import { Asset, Epoch, Token } from '../generated/schema'
 import { Wrapped1155Metadata } from '../generated/MarketFactory/Wrapped1155Metadata'
 import { ERC20 } from '../generated/MarketFactory/ERC20'
 import { ERC20SymbolBytes } from '../generated/MarketFactory/ERC20SymbolBytes'
@@ -91,6 +91,17 @@ export function createAsset(assetAddress: Address): Asset {
     asset.collaterals = []
   }
   return asset
+}
+
+export function createEpoch(epochIndex: BigInt): Epoch {
+  let epoch = Epoch.load(epochIndex.toString())
+  if (epoch === null) {
+    epoch = new Epoch(epochIndex.toString())
+    epoch.startTimestamp = getStartTimestamp(epochIndex)
+    epoch.endTimestamp = getEndTimestamp(epochIndex)
+    epoch.save()
+  }
+  return epoch
 }
 
 export function getEpochIndex(couponAddress: Address): BigInt {

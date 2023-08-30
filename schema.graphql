@@ -12,6 +12,21 @@ type Asset @entity {
   substitutes: [Token!]!
 }
 
+type Epoch @entity {
+  id: ID!
+  startTimestamp: BigInt!
+  endTimestamp: BigInt!
+}
+
+type AssetStatus @entity {
+  id: ID! # ${address}-${epoch}
+  asset: Asset!
+  epoch: Epoch!
+  totalDeposits: BigInt!
+  totalAvailable: BigInt!
+  bestCouponPrice: BigInt!
+}
+
 type Collateral @entity {
   id: ID!
   liquidationThreshold: BigInt!
@@ -26,10 +41,8 @@ type BondPosition @entity {
   principal: BigInt!
   substitute: Token!
   underlying: Token!
-  startEpoch: BigInt!
-  startTimestamp: BigInt!
-  expiryEpoch: BigInt!
-  expiryTimestamp: BigInt!
+  fromEpoch: Epoch!
+  toEpoch: Epoch!
 }
 
 
@@ -47,10 +60,7 @@ type Market @entity {
   a: BigInt!
   r: BigInt!
   d: BigInt!
-
-  epoch: BigInt!
-  startTimestamp: BigInt!
-  endTimestamp: BigInt!
+  epoch: Epoch!
 
   depths: [Depth!]! @derivedFrom(field: "market")
 }
