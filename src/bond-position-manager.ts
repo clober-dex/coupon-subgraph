@@ -1,4 +1,11 @@
-import { Address, BigInt, store } from '@graphprotocol/graph-ts'
+import {
+  Address,
+  BigInt,
+  ethereum,
+  store,
+  log,
+  Bytes,
+} from '@graphprotocol/graph-ts'
 
 import {
   BondPositionManager as BondPositionManagerContract,
@@ -29,7 +36,8 @@ export function handleRegisterAsset(event: RegisterAsset): void {
   asset.save()
 }
 
-function updateBondPosition(tokenId: BigInt): BondPosition {
+export function handleUpdateBondPosition(event: UpdatePosition): void {
+  const tokenId = event.params.tokenId
   const bondPositionManager = BondPositionManagerContract.bind(
     Address.fromString(BOND_POSITION_MANAGER_ADDRESS),
   )
@@ -49,16 +57,24 @@ function updateBondPosition(tokenId: BigInt): BondPosition {
     .underlyingToken()
     .toHexString()
   bondPosition.save()
-  return bondPosition as BondPosition
-}
-
-export function handleUpdateBondPosition(event: UpdatePosition): void {
-  updateBondPosition(event.params.tokenId)
 }
 
 export function handleBondPositionTransfer(event: Transfer): void {
-  const bondPosition = updateBondPosition(event.params.tokenId)
-  if (event.params.to.toHexString() == ADDRESS_ZERO) {
+  const bondPosition = BondPosition.load(event.params.tokenId.toString())
+  if (bondPosition === null) {
+    return
+  }
+
+  const bondPositionManager = BondPositionManagerContract.bind(
+    Address.fromString(BOND_POSITION_MANAGER_ADDRESS),
+  )
+  bondPosition.user = bondPositionManager
+    .ownerOf(event.params.tokenId)
+    .toHexString()
+
+  if (bondPosition.user == ADDRESS_ZERO) {
     store.remove('BondPosition', bondPosition.id)
+  } else {
+    bondPosition.save()
   }
 }
