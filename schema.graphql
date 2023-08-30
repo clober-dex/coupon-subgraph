@@ -25,6 +25,8 @@ type BondPosition @entity {
   amount: BigInt!
   substitute: Token!
   underlying: Token!
+  startEpoch: BigInt!
+  startTimestamp: BigInt!
   expiryEpoch: BigInt!
   expiryTimestamp: BigInt!
 }

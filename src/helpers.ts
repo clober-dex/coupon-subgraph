@@ -116,3 +116,10 @@ export function getEndTimestamp(epochIndex: BigInt): BigInt {
     BigInt.fromI32(1),
   )
 }
+
+export function getEpochIndexByTimestamp(timestamp: BigInt): BigInt {
+  const date = new Date(timestamp.toI64() * 1000)
+  const year = date.getUTCFullYear()
+  const half = Date.fromString(year.toString().concat('-07-01')).getTime()
+  return BigInt.fromI32((year - 1970) * 2 + (date.getTime() < half ? 0 : 1))
+}

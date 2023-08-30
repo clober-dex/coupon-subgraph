@@ -1,11 +1,4 @@
-import {
-  Address,
-  BigInt,
-  ethereum,
-  store,
-  log,
-  Bytes,
-} from '@graphprotocol/graph-ts'
+import { Address, BigInt, store } from '@graphprotocol/graph-ts'
 
 import {
   BondPositionManager as BondPositionManagerContract,
@@ -21,6 +14,8 @@ import {
   createAsset,
   createToken,
   getEndTimestamp,
+  getEpochIndexByTimestamp,
+  getStartTimestamp,
 } from './helpers'
 import { BOND_POSITION_MANAGER_ADDRESS } from './addresses'
 
@@ -46,8 +41,12 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     bondPosition = new BondPosition(tokenId.toString())
   }
   const position = bondPositionManager.getPosition(tokenId)
+  const currentEpochIndex = getEpochIndexByTimestamp(event.block.timestamp)
+
   bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
   bondPosition.amount = position.amount
+  bondPosition.startEpoch = currentEpochIndex
+  bondPosition.startTimestamp = getStartTimestamp(currentEpochIndex)
   bondPosition.expiryEpoch = BigInt.fromI32(position.expiredWith)
   bondPosition.expiryTimestamp = getEndTimestamp(
     BigInt.fromI32(position.expiredWith),
