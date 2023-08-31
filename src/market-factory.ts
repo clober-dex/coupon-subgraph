@@ -11,10 +11,11 @@ import {
 } from '../generated/templates'
 
 import { createEpoch, createToken, getEpochIndex } from './helpers'
-import { COUPON_MARKET_DEPLOYER_ADDRESS } from './addresses'
+import { getCouponMarketDeployerAddress } from './addresses'
 
 export function handleCreateStableMarket(event: CreateStableMarket): void {
   const epochIndex = getEpochIndex(event.params.baseToken)
+  const COUPON_MARKET_DEPLOYER_ADDRESS = getCouponMarketDeployerAddress()
   if (
     epochIndex === BigInt.fromI32(0) ||
     event.transaction.from.toHexString().toLowerCase() !==
@@ -46,6 +47,7 @@ export function handleCreateStableMarket(event: CreateStableMarket): void {
 
 export function handleCreateVolatileMarket(event: CreateVolatileMarket): void {
   const epochIndex = getEpochIndex(event.params.baseToken)
+  const COUPON_MARKET_DEPLOYER_ADDRESS = getCouponMarketDeployerAddress()
   if (
     epochIndex === BigInt.fromI32(0) ||
     event.transaction.from.toHexString().toLowerCase() !=

@@ -1,4 +1,4 @@
-import { Address, BigInt, store, ethereum, log } from '@graphprotocol/graph-ts'
+import { Address, BigInt, store, ethereum } from '@graphprotocol/graph-ts'
 
 import {
   BondPositionManager as BondPositionManagerContract,
@@ -8,7 +8,7 @@ import {
 } from '../generated/BondPositionManager/BondPositionManager'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
-import { AssetStatus, BondPosition, Market } from '../generated/schema'
+import { AssetStatus, BondPosition } from '../generated/schema'
 import {
   DepositController as DepositControllerContract,
   DepositController__getCouponMarketInputCouponKeyStruct,
@@ -16,8 +16,8 @@ import {
 
 import { ADDRESS_ZERO, createAsset, createEpoch, createToken } from './helpers'
 import {
-  BOND_POSITION_MANAGER_ADDRESS,
-  DEPOSIT_CONTROLLER_ADDRESS,
+  getBondPositionManagerAddress,
+  getDepositControllerAddress,
 } from './addresses'
 
 export function handleRegisterAsset(event: RegisterAsset): void {
@@ -34,6 +34,7 @@ export function handleRegisterAsset(event: RegisterAsset): void {
 
 export function handleUpdateBondPosition(event: UpdatePosition): void {
   const tokenId = event.params.tokenId
+  const BOND_POSITION_MANAGER_ADDRESS = getBondPositionManagerAddress()
   const bondPositionManager = BondPositionManagerContract.bind(
     Address.fromString(BOND_POSITION_MANAGER_ADDRESS),
   )
@@ -89,6 +90,7 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     position.asset,
     BigInt.fromI32(position.expiredWith),
   )
+  const DEPOSIT_CONTROLLER_ADDRESS = getDepositControllerAddress()
   const depositControllerContract = DepositControllerContract.bind(
     Address.fromString(DEPOSIT_CONTROLLER_ADDRESS),
   )
@@ -116,7 +118,7 @@ export function handleBondPositionTransfer(event: Transfer): void {
   if (bondPosition === null) {
     return
   }
-
+  const BOND_POSITION_MANAGER_ADDRESS = getBondPositionManagerAddress()
   const bondPositionManager = BondPositionManagerContract.bind(
     Address.fromString(BOND_POSITION_MANAGER_ADDRESS),
   )
