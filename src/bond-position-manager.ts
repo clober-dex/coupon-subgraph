@@ -78,7 +78,8 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     .plus(boughtAmount)
 
   const position = bondPositionManager.getPosition(tokenId)
-  bondPosition.fromEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
+  const currentEpochIndex = getEpochIndexByTimestamp(event.block.timestamp)
+  bondPosition.fromEpoch = createEpoch(currentEpochIndex).id
   bondPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
   bondPosition.substitute = position.asset.toHexString()
   bondPosition.underlying = AssetContract.bind(position.asset)
