@@ -23,7 +23,7 @@ type AssetStatus @entity {
   asset: Asset!
   epoch: Epoch!
   market: Market!
-  totalDeposits: BigInt!
+  totalDeposited: BigInt!
 }
 
 type Collateral @entity {
