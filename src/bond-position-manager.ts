@@ -49,10 +49,10 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     const rawAmount = data[1].toBigInt()
     const options = data[2].toI32()
     if (options & 0x1) {
-      // bid
+      // bid (withdraw)
       boughtAmount = boughtAmount.plus(orderBookContract.rawToQuote(rawAmount))
     } else {
-      // ask
+      // ask (deposit)
       soldAmount = soldAmount.plus(orderBookContract.rawToQuote(rawAmount))
     }
   }
@@ -66,14 +66,17 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
   let bondPosition = BondPosition.load(tokenId.toString())
   if (bondPosition === null) {
     bondPosition = new BondPosition(tokenId.toString())
+    bondPosition.amount = BigInt.zero()
     bondPosition.principal = BigInt.zero()
   }
-  const previousPrincipal = bondPosition.principal
+  const previousAmount = bondPosition.amount
   bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
-  bondPosition.amount = event.params.amount
-  bondPosition.principal = event.params.amount
-    .minus(soldAmount)
+  bondPosition.principal = bondPosition.principal
+    .plus(event.params.amount)
+    .minus(bondPosition.amount)
     .plus(boughtAmount)
+    .minus(soldAmount)
+  bondPosition.amount = event.params.amount
   bondPosition.fromEpoch = createEpoch(
     getEpochIndexByTimestamp(event.block.timestamp),
   ).id
@@ -94,8 +97,8 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
       .concat(epochIndex.toString())
     const assetStatus = AssetStatus.load(assetStatusKey) as AssetStatus
     assetStatus.totalDeposited = assetStatus.totalDeposited
-      .plus(bondPosition.principal)
-      .minus(previousPrincipal)
+      .minus(previousAmount)
+      .plus(bondPosition.amount)
     assetStatus.save()
   }
 }
