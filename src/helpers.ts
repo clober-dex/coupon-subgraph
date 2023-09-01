@@ -1,10 +1,12 @@
-import { BigInt, Address } from '@graphprotocol/graph-ts'
+import { BigInt, Address, ethereum } from '@graphprotocol/graph-ts'
 
-import { Asset, Epoch, Token } from '../generated/schema'
+import { Asset, AssetStatus, Epoch, Token } from '../generated/schema'
 import { Wrapped1155Metadata } from '../generated/MarketFactory/Wrapped1155Metadata'
 import { ERC20 } from '../generated/MarketFactory/ERC20'
 import { ERC20SymbolBytes } from '../generated/MarketFactory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../generated/MarketFactory/ERC20NameBytes'
+import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
+import { DepositController__getCouponMarketInputCouponKeyStruct } from '../generated/BondPositionManager/DepositController'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
@@ -91,6 +93,40 @@ export function createAsset(assetAddress: Address): Asset {
     asset.collaterals = []
   }
   return asset
+}
+
+export function buildCouponKey(
+  asset: Address,
+  epoch: BigInt,
+): DepositController__getCouponMarketInputCouponKeyStruct {
+  const fixedSizedArray: Array<ethereum.Value> = [
+    ethereum.Value.fromAddress(asset),
+    ethereum.Value.fromUnsignedBigInt(epoch),
+  ]
+  return changetype<DepositController__getCouponMarketInputCouponKeyStruct>(
+    fixedSizedArray,
+  )
+}
+
+export function createAssetStatus(
+  substituteAddress: Address,
+  epoch: BigInt,
+  marketAddress: Address,
+): AssetStatus {
+  const underlying = AssetContract.bind(substituteAddress)
+    .underlyingToken()
+    .toHexString()
+  const assetStatusKey = underlying.concat('-').concat(epoch.toString())
+  let assetStatus = AssetStatus.load(assetStatusKey)
+  if (assetStatus === null) {
+    assetStatus = new AssetStatus(assetStatusKey)
+    assetStatus.asset = underlying
+    assetStatus.epoch = epoch.toString()
+    assetStatus.market = marketAddress.toHexString()
+    assetStatus.totalDeposited = BigInt.fromI32(0)
+    assetStatus.save()
+  }
+  return assetStatus
 }
 
 export function createEpoch(epochIndex: BigInt): Epoch {

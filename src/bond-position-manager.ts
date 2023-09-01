@@ -9,10 +9,6 @@ import {
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
 import { AssetStatus, BondPosition } from '../generated/schema'
-import {
-  DepositController as DepositControllerContract,
-  DepositController__getCouponMarketInputCouponKeyStruct,
-} from '../generated/BondPositionManager/DepositController'
 
 import {
   ADDRESS_ZERO,
@@ -21,10 +17,7 @@ import {
   createToken,
   getEpochIndexByTimestamp,
 } from './helpers'
-import {
-  getBondPositionManagerAddress,
-  getDepositControllerAddress,
-} from './addresses'
+import { getBondPositionManagerAddress } from './addresses'
 
 export function handleRegisterAsset(event: RegisterAsset): void {
   const substitute = createToken(event.params.asset)
@@ -96,25 +89,13 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     epochIndex <= BigInt.fromString(bondPosition.toEpoch).toI32();
     epochIndex++
   ) {
-    const couponKey = buildCouponKey(position.asset, BigInt.fromI32(epochIndex))
-    const marketAddress = DepositControllerContract.bind(
-      Address.fromString(getDepositControllerAddress()),
-    ).getCouponMarket(couponKey)
     const assetStatusKey = bondPosition.underlying
       .concat('-')
       .concat(epochIndex.toString())
-    let assetStatus = AssetStatus.load(assetStatusKey)
-    if (assetStatus === null) {
-      assetStatus = new AssetStatus(assetStatusKey)
-      assetStatus.asset = bondPosition.underlying
-      assetStatus.epoch = epochIndex.toString()
-      assetStatus.market = marketAddress.toHexString()
-      assetStatus.totalDeposited = BigInt.zero()
-    }
+    const assetStatus = AssetStatus.load(assetStatusKey) as AssetStatus
     assetStatus.totalDeposited = assetStatus.totalDeposited
       .plus(bondPosition.principal)
       .minus(previousPrincipal)
-
     assetStatus.save()
   }
 }
@@ -136,17 +117,4 @@ export function handleBondPositionTransfer(event: Transfer): void {
   } else {
     bondPosition.save()
   }
-}
-
-function buildCouponKey(
-  asset: Address,
-  epoch: BigInt,
-): DepositController__getCouponMarketInputCouponKeyStruct {
-  const fixedSizedArray: Array<ethereum.Value> = [
-    ethereum.Value.fromAddress(asset),
-    ethereum.Value.fromUnsignedBigInt(epoch),
-  ]
-  return changetype<DepositController__getCouponMarketInputCouponKeyStruct>(
-    fixedSizedArray,
-  )
 }

@@ -7,7 +7,7 @@
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ coupon-subgraph",
     "create-local": "graph create --node http://dev-subgraph.coupon.finance:8020/ coupon-subgraph",
     "remove-local": "graph remove --node http://dev-subgraph.coupon.finance:8020/ coupon-subgraph",
-    "deploy-local": "graph deploy --node http://dev-subgraph.coupon.finance:8020/ --ipfs http://dev-subgraph.coupon.finance:5001 coupon-subgraph",
+    "deploy-local": "graph deploy --node http://dev-subgraph.coupon.finance:8020/ --ipfs http://dev-subgraph.coupon.finance:5001 coupon-subgraph --network localhost",
     "test": "graph test"
   },
   "dependencies": {

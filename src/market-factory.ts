@@ -1,4 +1,4 @@
-import { BigInt } from '@graphprotocol/graph-ts'
+import { Address, BigInt } from '@graphprotocol/graph-ts'
 
 import {
   CreateStableMarket,
@@ -10,7 +10,12 @@ import {
   OrderBook as OrderBookTemplate,
 } from '../generated/templates'
 
-import { createEpoch, createToken, getEpochIndex } from './helpers'
+import {
+  createAssetStatus,
+  createEpoch,
+  createToken,
+  getEpochIndex,
+} from './helpers'
 import { getCouponMarketDeployerAddress } from './addresses'
 
 export function handleCreateStableMarket(event: CreateStableMarket): void {
@@ -42,6 +47,12 @@ export function handleCreateStableMarket(event: CreateStableMarket): void {
   OrderBookTemplate.create(event.params.market)
 
   market.save()
+
+  createAssetStatus(
+    event.params.quoteToken,
+    epochIndex,
+    Address.fromString(market.id),
+  )
 }
 
 export function handleCreateVolatileMarket(event: CreateVolatileMarket): void {
@@ -73,4 +84,10 @@ export function handleCreateVolatileMarket(event: CreateVolatileMarket): void {
   OrderBookTemplate.create(event.params.market)
 
   market.save()
+
+  createAssetStatus(
+    event.params.quoteToken,
+    epochIndex,
+    Address.fromString(market.id),
+  )
 }
