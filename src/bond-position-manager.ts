@@ -70,22 +70,27 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     bondPosition.principal = BigInt.zero()
   }
   const previousAmount = bondPosition.amount
-  bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
-  bondPosition.principal = bondPosition.principal
-    .plus(event.params.amount)
-    .minus(bondPosition.amount)
-    .plus(boughtAmount)
-    .minus(soldAmount)
-  bondPosition.amount = event.params.amount
-  bondPosition.fromEpoch = createEpoch(
-    getEpochIndexByTimestamp(event.block.timestamp),
-  ).id
-  bondPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
-  bondPosition.substitute = position.asset.toHexString()
-  bondPosition.underlying = AssetContract.bind(position.asset)
-    .underlyingToken()
-    .toHexString()
-  bondPosition.save()
+  let mightBeDeleted = false
+  if (event.params.amount.equals(BigInt.zero())) {
+    mightBeDeleted = true
+  } else {
+    bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
+    bondPosition.principal = bondPosition.principal
+      .plus(event.params.amount)
+      .minus(bondPosition.amount)
+      .plus(boughtAmount)
+      .minus(soldAmount)
+    bondPosition.amount = event.params.amount
+    bondPosition.fromEpoch = createEpoch(
+      getEpochIndexByTimestamp(event.block.timestamp),
+    ).id
+    bondPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
+    bondPosition.substitute = position.asset.toHexString()
+    bondPosition.underlying = AssetContract.bind(position.asset)
+      .underlyingToken()
+      .toHexString()
+    bondPosition.save()
+  }
 
   for (
     let epochIndex = BigInt.fromString(bondPosition.fromEpoch).toI32();
@@ -101,6 +106,10 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
       .plus(bondPosition.amount)
     assetStatus.save()
   }
+
+  if (mightBeDeleted) {
+    store.remove('BondPosition', tokenId.toString())
+  }
 }
 
 export function handleBondPositionTransfer(event: Transfer): void {
@@ -108,16 +117,13 @@ export function handleBondPositionTransfer(event: Transfer): void {
   if (bondPosition === null) {
     return
   }
-  const bondPositionManager = BondPositionManagerContract.bind(
-    Address.fromString(getBondPositionManagerAddress()),
-  )
-  bondPosition.user = bondPositionManager
-    .ownerOf(event.params.tokenId)
-    .toHexString()
-
-  if (bondPosition.user == ADDRESS_ZERO) {
-    store.remove('BondPosition', bondPosition.id)
-  } else {
+  if (event.params.to.toHexString() != ADDRESS_ZERO) {
+    const bondPositionManager = BondPositionManagerContract.bind(
+      Address.fromString(getBondPositionManagerAddress()),
+    )
+    bondPosition.user = bondPositionManager
+      .ownerOf(event.params.tokenId)
+      .toHexString()
     bondPosition.save()
   }
 }
