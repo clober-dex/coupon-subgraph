@@ -13,7 +13,12 @@ import {
   UpdatePosition,
 } from '../generated/LoanPositionManager/LoanPositionManager'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
-import { Collateral, LoanPosition, Token } from '../generated/schema'
+import {
+  AssetStatus,
+  Collateral,
+  LoanPosition,
+  Token,
+} from '../generated/schema'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { CouponOracle as CouponOracleContract } from '../generated/LoanPositionManager/CouponOracle'
 
@@ -95,7 +100,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.amount = BigInt.zero()
     loanPosition.principal = BigInt.zero()
   }
-  // const previousAmount = loanPosition.amount
+  const previousAmount = loanPosition.amount
   let mightBeDeleted = false
   if (event.params.debtAmount.equals(BigInt.zero())) {
     mightBeDeleted = true
@@ -150,6 +155,21 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .div(collateralAmount.times(collateralPrice))
       .times(BigDecimal.fromString('100'))
     loanPosition.save()
+  }
+
+  for (
+    let epochIndex = BigInt.fromString(loanPosition.fromEpoch).toI32();
+    epochIndex <= BigInt.fromString(loanPosition.toEpoch).toI32();
+    epochIndex++
+  ) {
+    const assetStatusKey = loanPosition.underlying
+      .concat('-')
+      .concat(epochIndex.toString())
+    const assetStatus = AssetStatus.load(assetStatusKey) as AssetStatus
+    assetStatus.totalBorrowed = assetStatus.totalBorrowed
+      .minus(previousAmount)
+      .plus(loanPosition.amount)
+    assetStatus.save()
   }
 
   if (mightBeDeleted) {

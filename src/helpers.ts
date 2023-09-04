@@ -135,6 +135,7 @@ export function createAssetStatus(
     assetStatus.epoch = epoch.toString()
     assetStatus.market = marketAddress.toHexString()
     assetStatus.totalDeposited = BigInt.fromI32(0)
+    assetStatus.totalBorrowed = BigInt.fromI32(0)
     assetStatus.save()
   }
   return assetStatus
