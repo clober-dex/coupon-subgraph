@@ -16,10 +16,15 @@ export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
     AssetContract.bind(event.params.collateral).underlyingToken(),
   )
 
-  let collateral = Collateral.load(event.params.collateral.toHexString())
+  const key = event.params.collateral
+    .toHexString()
+    .concat('-')
+    .concat(event.params.debt.toHexString())
+  let collateral = Collateral.load(key)
   if (collateral === null) {
-    collateral = new Collateral(event.params.collateral.toHexString())
+    collateral = new Collateral(key)
     collateral.underlying = collateralUnderlying.id
+    collateral.substitute = event.params.collateral.toHexString()
     const loanConfiguration = LoanPositionManagerContract.bind(
       event.address,
     ).getLoanConfiguration(event.params.collateral, event.params.debt)
@@ -33,8 +38,6 @@ export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
   )
 
   const asset = createAsset(Address.fromString(substituteUnderlying.id))
-  asset.collaterals = asset.collaterals.concat([
-    event.params.collateral.toHexString(),
-  ])
+  asset.collaterals = asset.collaterals.concat([key])
   asset.save()
 }

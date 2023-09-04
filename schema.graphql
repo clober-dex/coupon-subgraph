@@ -27,10 +27,11 @@ type AssetStatus @entity {
 }
 
 type Collateral @entity {
-  id: ID!
+  id: ID! # ${substitute}-${debt}
   liquidationThreshold: BigInt!
   liquidationTargetLtv: BigInt!
   underlying: Token!
+  substitute: Token!
 }
 
 type BondPosition @entity {
