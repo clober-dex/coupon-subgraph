@@ -61,16 +61,23 @@ dataSources:
           file: ./abis/LoanPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
+        - name: OrderBook
+          file: ./abis/OrderBook.json
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes
           file: ./abis/ERC20SymbolBytes.json
         - name: ERC20NameBytes
           file: ./abis/ERC20NameBytes.json
+        - name: Multicall3
+          file: ./abis/Multicall3.json
       eventHandlers:
         - event: SetLoanConfiguration(indexed address,indexed
             address,uint32,uint32,uint32,uint32)
           handler: handleSetLoanConfiguration
+        - event: UpdatePosition(indexed uint256,uint256,uint256,uint8)
+          handler: handleUpdateLoanPosition
+          receipt: true
       file: ./src/loan-position-manager.ts
   - kind: ethereum
     name: MarketFactory

@@ -45,6 +45,19 @@ type BondPosition @entity {
   toEpoch: Epoch!
 }
 
+type LoanPosition @entity {
+  id: ID! # token id
+  user: String!
+  collateral: Collateral!
+  collateralAmount: BigInt!
+  amount: BigInt!
+  principal: BigInt!
+  substitute: Token!
+  underlying: Token!
+  fromEpoch: Epoch!
+  toEpoch: Epoch!
+}
+
 
 # Clober
 
