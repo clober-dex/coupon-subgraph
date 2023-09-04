@@ -61,6 +61,8 @@ dataSources:
           file: ./abis/LoanPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
+        - name: CouponOracle
+          file: ./abis/CouponOracle.json
         - name: OrderBook
           file: ./abis/OrderBook.json
         - name: ERC20
