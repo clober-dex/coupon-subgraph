@@ -43,6 +43,7 @@ type BondPosition @entity {
   underlying: Token!
   fromEpoch: Epoch!
   toEpoch: Epoch!
+  timestamp: BigInt!
 }
 
 type LoanPosition @entity {
@@ -57,6 +58,7 @@ type LoanPosition @entity {
   fromEpoch: Epoch!
   toEpoch: Epoch!
   ltv: BigDecimal!
+  timestamp: BigInt!
 }
 
 

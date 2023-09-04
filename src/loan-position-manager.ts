@@ -144,6 +144,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       couponOracle.getAssetPrice(position.debtToken).toString(),
     ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
 
+    loanPosition.timestamp = event.block.timestamp
     loanPosition.ltv = deptAmount
       .times(deptPrice)
       .div(collateralAmount.times(collateralPrice))

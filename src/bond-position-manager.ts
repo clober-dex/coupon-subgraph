@@ -89,6 +89,7 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     bondPosition.underlying = AssetContract.bind(position.asset)
       .underlyingToken()
       .toHexString()
+    bondPosition.timestamp = event.block.timestamp
     bondPosition.save()
   }
 
