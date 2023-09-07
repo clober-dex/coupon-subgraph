@@ -111,6 +111,10 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .toHexString()
       .concat('-')
       .concat(position.debtToken.toHexString())
+    const collateral = Collateral.load(loanPosition.collateral) as Collateral
+    loanPosition.ltvThreshold = BigDecimal.fromString(
+      collateral.liquidationThreshold.toString(),
+    ).div(BigDecimal.fromString('10000'))
     loanPosition.collateralAmount = position.collateralAmount
     loanPosition.principal = loanPosition.principal
       .plus(event.params.debtAmount)
