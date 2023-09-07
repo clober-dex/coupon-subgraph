@@ -6,8 +6,10 @@
     "build": "graph build",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ coupon-subgraph",
     "create-local": "graph create --node http://dev-subgraph.coupon.finance:8020/ coupon-subgraph",
+    "create-testnet": "graph create --node http://testnet-subgraph.coupon.finance:8020/ coupon-subgraph",
     "remove-local": "graph remove --node http://dev-subgraph.coupon.finance:8020/ coupon-subgraph",
     "deploy-local": "graph deploy --node http://dev-subgraph.coupon.finance:8020/ --ipfs http://dev-subgraph.coupon.finance:5001 coupon-subgraph --network localhost",
+    "deploy-testnet": "graph deploy --node http://testnet-subgraph.coupon.finance:8020/ --ipfs http://testnet-subgraph.coupon.finance:5001 coupon-subgraph --network arbitrum-goerli",
     "test": "graph test"
   },
   "dependencies": {
