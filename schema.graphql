@@ -58,8 +58,6 @@ type LoanPosition @entity {
   underlying: Token!
   fromEpoch: Epoch!
   toEpoch: Epoch!
-  ltv: BigDecimal!
-  ltvThreshold: BigDecimal!
   createdAt: BigInt!
 }
 

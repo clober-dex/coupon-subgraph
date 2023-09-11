@@ -6,19 +6,6 @@ const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11'
 const DEV_CHAIN_ID = BigInt.fromI32(7777)
 const TEST_CHAIN_ID = BigInt.fromI32(421613)
 
-export function getCouponOracleAddress(): string {
-  const multiCall = Multicall3.bind(Address.fromString(MULTICALL3_ADDRESS))
-  const chainId = multiCall.getChainId()
-  if (chainId == DEV_CHAIN_ID) {
-    return '0x8831c769874fF23ED5DF0daacfD84Cc147335506'
-  } else if (chainId == TEST_CHAIN_ID) {
-    return '0xE0dBCB42CCAc63C949cE3EF879A647DDb662916d'
-  } else {
-    // TODO: Update this address
-    return '0x0000000000000000000000000000000000000000'
-  }
-}
-
 export function getCouponMarketDeployerAddress(): string {
   const multiCall = Multicall3.bind(Address.fromString(MULTICALL3_ADDRESS))
   const chainId = multiCall.getChainId()

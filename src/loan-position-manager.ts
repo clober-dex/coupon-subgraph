@@ -1,11 +1,4 @@
-import {
-  Address,
-  BigInt,
-  ethereum,
-  store,
-  log,
-  BigDecimal,
-} from '@graphprotocol/graph-ts'
+import { Address, BigInt, ethereum, store, log } from '@graphprotocol/graph-ts'
 
 import {
   SetLoanConfiguration,
@@ -13,23 +6,15 @@ import {
   UpdatePosition,
 } from '../generated/LoanPositionManager/LoanPositionManager'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
-import {
-  AssetStatus,
-  Collateral,
-  LoanPosition,
-  Token,
-} from '../generated/schema'
+import { AssetStatus, Collateral, LoanPosition } from '../generated/schema'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
-import { CouponOracle as CouponOracleContract } from '../generated/LoanPositionManager/CouponOracle'
 
 import {
   createAsset,
   createEpoch,
   createToken,
-  exponentToBigDecimal,
   getEpochIndexByTimestamp,
 } from './helpers'
-import { getCouponOracleAddress } from './addresses'
 
 export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
   createToken(event.params.collateral)
@@ -111,10 +96,6 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .toHexString()
       .concat('-')
       .concat(position.debtToken.toHexString())
-    const collateral = Collateral.load(loanPosition.collateral) as Collateral
-    loanPosition.ltvThreshold = BigDecimal.fromString(
-      collateral.liquidationThreshold.toString(),
-    ).div(BigDecimal.fromString('10000'))
     loanPosition.collateralAmount = position.collateralAmount
     loanPosition.principal = loanPosition.principal
       .plus(event.params.debtAmount)
@@ -130,34 +111,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.underlying = AssetContract.bind(position.debtToken)
       .underlyingToken()
       .toHexString()
-
-    const couponOracle = CouponOracleContract.bind(
-      Address.fromString(getCouponOracleAddress()),
-    )
-    const priceDecimals = couponOracle.decimals()
-    const collateralToken = Token.load(
-      position.collateralToken.toHexString(),
-    ) as Token
-    const collateralAmount = BigDecimal.fromString(
-      position.collateralAmount.toString(),
-    ).div(exponentToBigDecimal(collateralToken.decimals))
-    const collateralPrice = BigDecimal.fromString(
-      couponOracle.getAssetPrice(position.collateralToken).toString(),
-    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
-
-    const deptToken = Token.load(position.debtToken.toHexString()) as Token
-    const deptAmount = BigDecimal.fromString(
-      position.debtAmount.toString(),
-    ).div(exponentToBigDecimal(deptToken.decimals))
-    const deptPrice = BigDecimal.fromString(
-      couponOracle.getAssetPrice(position.debtToken).toString(),
-    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
-
     loanPosition.createdAt = event.block.timestamp
-    loanPosition.ltv = deptAmount
-      .times(deptPrice)
-      .div(collateralAmount.times(collateralPrice))
-      .times(BigDecimal.fromString('100'))
     loanPosition.save()
   }
 
