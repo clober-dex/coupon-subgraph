@@ -21,18 +21,16 @@ dataSources:
           file: ./abis/BondPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
+        # takeOrder
         - name: OrderBook
           file: ./abis/OrderBook.json
-        - name: DepositController
-          file: ./abis/DepositController.json
+        # handleRegisterAsset
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes
           file: ./abis/ERC20SymbolBytes.json
         - name: ERC20NameBytes
           file: ./abis/ERC20NameBytes.json
-        - name: Multicall3
-          file: ./abis/Multicall3.json
       eventHandlers:
         - event: RegisterAsset(indexed address)
           handler: handleRegisterAsset
@@ -61,16 +59,16 @@ dataSources:
           file: ./abis/LoanPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
+        # takeOrder
         - name: OrderBook
           file: ./abis/OrderBook.json
+        # handleRegisterAsset
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes
           file: ./abis/ERC20SymbolBytes.json
         - name: ERC20NameBytes
           file: ./abis/ERC20NameBytes.json
-        - name: Multicall3
-          file: ./abis/Multicall3.json
       eventHandlers:
         - event: SetLoanConfiguration(indexed address,indexed
             address,uint32,uint32,uint32,uint32)
@@ -78,6 +76,8 @@ dataSources:
         - event: UpdatePosition(indexed uint256,uint256,uint256,uint8)
           handler: handleUpdateLoanPosition
           receipt: true
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleLoanPositionTransfer
       file: ./src/loan-position-manager.ts
   - kind: ethereum
     name: MarketFactory
@@ -102,6 +102,8 @@ dataSources:
           file: ./abis/OrderBook.json
         - name: Wrapped1155Metadata
           file: ./abis/Wrapped1155Metadata.json
+        - name: Substitute
+          file: ./abis/Substitute.json
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes
@@ -110,8 +112,6 @@ dataSources:
           file: ./abis/ERC20NameBytes.json
         - name: Multicall3
           file: ./abis/Multicall3.json
-        - name: Substitute
-          file: ./abis/Substitute.json
       eventHandlers:
         - event: CreateStableMarket(indexed
             address,address,address,address,uint256,uint256,int24,uint24,uint128,uint128)

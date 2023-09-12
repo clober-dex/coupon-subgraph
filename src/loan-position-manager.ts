@@ -1,15 +1,17 @@
-import { Address, BigInt, ethereum, store, log } from '@graphprotocol/graph-ts'
+import { Address, BigInt, store, ethereum } from '@graphprotocol/graph-ts'
 
 import {
-  SetLoanConfiguration,
   LoanPositionManager as LoanPositionManagerContract,
+  SetLoanConfiguration,
   UpdatePosition,
+  Transfer,
 } from '../generated/LoanPositionManager/LoanPositionManager'
+import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
 import { AssetStatus, Collateral, LoanPosition } from '../generated/schema'
-import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 
 import {
+  ADDRESS_ZERO,
   createAsset,
   createEpoch,
   createToken,
@@ -89,7 +91,6 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
   let mightBeDeleted = false
   if (event.params.debtAmount.equals(BigInt.zero())) {
     mightBeDeleted = true
-    log.info('mightBeDeleted', [positionId.toString()])
   } else {
     loanPosition.user = loanPositionManager.ownerOf(positionId).toHexString()
     loanPosition.collateral = position.collateralToken
@@ -132,5 +133,19 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
 
   if (mightBeDeleted) {
     store.remove('LoanPosition', positionId.toString())
+  }
+}
+
+export function handleLoanPositionTransfer(event: Transfer): void {
+  const loanPosition = LoanPosition.load(event.params.tokenId.toString())
+  if (loanPosition === null) {
+    return
+  }
+  if (event.params.to.toHexString() != ADDRESS_ZERO) {
+    const loanPositionManager = LoanPositionManagerContract.bind(event.address)
+    loanPosition.user = loanPositionManager
+      .ownerOf(event.params.tokenId)
+      .toHexString()
+    loanPosition.save()
   }
 }

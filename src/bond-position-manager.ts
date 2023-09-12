@@ -3,8 +3,8 @@ import { Address, BigInt, store, ethereum } from '@graphprotocol/graph-ts'
 import {
   BondPositionManager as BondPositionManagerContract,
   RegisterAsset,
-  Transfer,
   UpdatePosition,
+  Transfer,
 } from '../generated/BondPositionManager/BondPositionManager'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
@@ -17,7 +17,6 @@ import {
   createToken,
   getEpochIndexByTimestamp,
 } from './helpers'
-import { getBondPositionManagerAddress } from './addresses'
 
 export function handleRegisterAsset(event: RegisterAsset): void {
   const substitute = createToken(event.params.asset)
@@ -58,9 +57,7 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
   }
 
   const tokenId = event.params.tokenId
-  const bondPositionManager = BondPositionManagerContract.bind(
-    Address.fromString(getBondPositionManagerAddress()),
-  )
+  const bondPositionManager = BondPositionManagerContract.bind(event.address)
   const position = bondPositionManager.getPosition(tokenId)
 
   let bondPosition = BondPosition.load(tokenId.toString())
@@ -119,9 +116,7 @@ export function handleBondPositionTransfer(event: Transfer): void {
     return
   }
   if (event.params.to.toHexString() != ADDRESS_ZERO) {
-    const bondPositionManager = BondPositionManagerContract.bind(
-      Address.fromString(getBondPositionManagerAddress()),
-    )
+    const bondPositionManager = BondPositionManagerContract.bind(event.address)
     bondPosition.user = bondPositionManager
       .ownerOf(event.params.tokenId)
       .toHexString()
