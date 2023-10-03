@@ -5,11 +5,13 @@
     "codegen": "graph codegen",
     "build": "graph build",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ coupon-subgraph",
-    "create-local": "graph create --node http://dev-subgraph.coupon.finance:8020/ coupon-subgraph",
-    "create-testnet": "graph create --node http://testnet-subgraph.coupon.finance:8020/ coupon-subgraph",
+    "echo-env": "dotenv -e .env -- cross-var echo %ACCESS_TOKEN%",
+    "create-local": "dotenv -e .env -- cross-var graph create --access-token=%ACCESS_TOKEN% --node http://dev-subgraph.coupon.finance:8020/ coupon-subgraph",
+    "create-testnet": "dotenv -e .env -- cross-var graph create --access-token=%ACCESS_TOKEN% --node http://testnet-subgraph.coupon.finance:8020/ coupon-subgraph",
     "remove-local": "graph remove --node http://dev-subgraph.coupon.finance:8020/ coupon-subgraph",
-    "deploy-local": "graph deploy --node http://dev-subgraph.coupon.finance:8020/ --ipfs http://dev-subgraph.coupon.finance:5001 coupon-subgraph --network localhost",
-    "deploy-testnet": "graph deploy --node http://testnet-subgraph.coupon.finance:8020/ --ipfs http://testnet-subgraph.coupon.finance:5001 coupon-subgraph --network arbitrum-goerli",
+    "deploy-local": "dotenv -e .env -- cross-var graph deploy --access-token=%ACCESS_TOKEN% --node http://dev-subgraph.coupon.finance:8020/ --ipfs http://dev-subgraph.coupon.finance:5001 coupon-subgraph --network localhost",
+    "deploy-testnet": "dotenv -e .env -- cross-var graph deploy --access-token=%ACCESS_TOKEN% --node http://testnet-subgraph.coupon.finance:8020/ --ipfs http://testnet-subgraph.coupon.finance:5001 coupon-subgraph --network arbitrum-goerli",
+    "remove-testnet": "graph remove --node http://testnet-subgraph.coupon.finance:8020/ coupon-subgraph",
     "test": "graph test"
   },
   "dependencies": {
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^6.2.0",
+    "cross-var": "^1.1.0",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
