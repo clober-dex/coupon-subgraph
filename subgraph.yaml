@@ -59,10 +59,8 @@ dataSources:
           file: ./abis/LoanPositionManager.json
         - name: Substitute
           file: ./abis/Substitute.json
-        # takeOrder
         - name: OrderBook
           file: ./abis/OrderBook.json
-        # handleRegisterAsset
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20SymbolBytes
