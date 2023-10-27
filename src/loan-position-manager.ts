@@ -39,6 +39,8 @@ export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
     ).getLoanConfiguration(event.params.collateral, event.params.debt)
     collateral.liquidationTargetLtv = loanConfiguration.liquidationTargetLtv
     collateral.liquidationThreshold = loanConfiguration.liquidationThreshold
+    collateral.totalCollateralized = BigInt.zero()
+    collateral.totalBorrowed = BigInt.zero()
     collateral.save()
   }
 
@@ -86,8 +88,11 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition = new LoanPosition(positionId.toString())
     loanPosition.amount = BigInt.zero()
     loanPosition.principal = BigInt.zero()
+    loanPosition.collateralAmount = BigInt.zero()
   }
   const previousAmount = loanPosition.amount
+  const previousCollateralAmount = loanPosition.collateralAmount
+
   let mightBeDeleted = false
   if (event.params.debtAmount.equals(BigInt.zero())) {
     mightBeDeleted = true
@@ -114,6 +119,17 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .toHexString()
     loanPosition.createdAt = event.block.timestamp
     loanPosition.save()
+  }
+
+  let collateral = Collateral.load(loanPosition.collateral)
+  if (collateral) {
+    collateral.totalCollateralized = collateral.totalCollateralized
+        .plus(loanPosition.collateralAmount)
+        .minus(previousCollateralAmount)
+    collateral.totalBorrowed = collateral.totalBorrowed
+        .plus(loanPosition.amount)
+        .minus(previousAmount)
+    collateral.save()
   }
 
   for (

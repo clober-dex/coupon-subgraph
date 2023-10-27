@@ -31,7 +31,7 @@ export function handleTakeOrder(event: TakeOrder): void {
       ? orderBookContract.rawToQuote(rawAmount)
       : orderBookContract.rawToBase(rawAmount, priceIndex, false)
 
-  if (rawAmount.equals(BigInt.fromI32(0))) {
+  if (rawAmount.equals(BigInt.zero())) {
     store.remove('Depth', depthId)
   } else {
     depth.save()

@@ -36,7 +36,7 @@ export function handleNFTTransfer(event: Transfer): void {
     .concat('-')
     .concat(isBid.toString())
   let depth = Depth.load(depthId)
-  let rawAmount = BigInt.fromI32(0)
+  let rawAmount = BigInt.zero()
   if (depth === null) {
     depth = new Depth(depthId)
     depth.market = marketAddress.toHexString()
@@ -57,7 +57,7 @@ export function handleNFTTransfer(event: Transfer): void {
       : orderBookContract.rawToBase(rawAmount, priceIndex, false)
   }
 
-  if (rawAmount.equals(BigInt.fromI32(0))) {
+  if (rawAmount.equals(BigInt.zero())) {
     store.remove('Depth', depthId)
   } else {
     depth.save()

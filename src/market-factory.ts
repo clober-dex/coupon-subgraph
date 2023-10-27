@@ -21,7 +21,7 @@ import { getCouponMarketDeployerAddress } from './addresses'
 export function handleCreateStableMarket(event: CreateStableMarket): void {
   const epochIndex = getEpochIndex(event.params.baseToken)
   if (
-    epochIndex === BigInt.fromI32(0) ||
+    epochIndex === BigInt.zero() ||
     event.transaction.from.toHexString().toLowerCase() !==
       getCouponMarketDeployerAddress().toLowerCase()
   ) {
@@ -39,7 +39,7 @@ export function handleCreateStableMarket(event: CreateStableMarket): void {
   market.takerFee = BigInt.fromI32(event.params.takerFee)
   market.a = event.params.a
   market.d = event.params.d
-  market.r = BigInt.fromI32(0)
+  market.r = BigInt.zero()
   market.epoch = createEpoch(epochIndex).id
 
   // create the tracked contract based on the template
@@ -58,7 +58,7 @@ export function handleCreateStableMarket(event: CreateStableMarket): void {
 export function handleCreateVolatileMarket(event: CreateVolatileMarket): void {
   const epochIndex = getEpochIndex(event.params.baseToken)
   if (
-    epochIndex === BigInt.fromI32(0) ||
+    epochIndex === BigInt.zero() ||
     event.transaction.from.toHexString().toLowerCase() !=
       getCouponMarketDeployerAddress().toLowerCase()
   ) {
@@ -75,7 +75,7 @@ export function handleCreateVolatileMarket(event: CreateVolatileMarket): void {
   market.makerFee = BigInt.fromI32(event.params.makerFee)
   market.takerFee = BigInt.fromI32(event.params.takerFee)
   market.a = event.params.a
-  market.d = BigInt.fromI32(0)
+  market.d = BigInt.zero()
   market.r = event.params.r
   market.epoch = createEpoch(epochIndex).id
 

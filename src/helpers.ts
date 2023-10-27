@@ -16,7 +16,7 @@ export function isNullEthValue(value: string): boolean {
   )
 }
 
-export const ZERO_BI = BigInt.fromI32(0)
+export const ZERO_BI = BigInt.zero()
 export const ONE_BI = BigInt.fromI32(1)
 
 export function exponentToBigDecimal(decimals: BigInt): BigDecimal {
@@ -120,8 +120,8 @@ export function createAssetStatus(
     assetStatus.asset = underlying
     assetStatus.epoch = epoch.toString()
     assetStatus.market = marketAddress.toHexString()
-    assetStatus.totalDeposited = BigInt.fromI32(0)
-    assetStatus.totalBorrowed = BigInt.fromI32(0)
+    assetStatus.totalDeposited = BigInt.zero()
+    assetStatus.totalBorrowed = BigInt.zero()
     assetStatus.save()
   }
   return assetStatus
