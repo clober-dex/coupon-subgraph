@@ -1,4 +1,4 @@
-import { BigInt, Address, ethereum, BigDecimal } from '@graphprotocol/graph-ts'
+import { BigInt, Address, BigDecimal } from '@graphprotocol/graph-ts'
 
 import { Asset, AssetStatus, Epoch, Token } from '../generated/schema'
 import { Wrapped1155Metadata } from '../generated/MarketFactory/Wrapped1155Metadata'
@@ -6,7 +6,6 @@ import { ERC20 } from '../generated/MarketFactory/ERC20'
 import { ERC20SymbolBytes } from '../generated/MarketFactory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../generated/MarketFactory/ERC20NameBytes'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
-import { DepositController__getCouponMarketInputCouponKeyStruct } from '../generated/BondPositionManager/DepositController'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
@@ -104,19 +103,6 @@ export function createAsset(assetAddress: Address): Asset {
     asset.collaterals = []
   }
   return asset
-}
-
-export function buildCouponKey(
-  asset: Address,
-  epoch: BigInt,
-): DepositController__getCouponMarketInputCouponKeyStruct {
-  const fixedSizedArray: Array<ethereum.Value> = [
-    ethereum.Value.fromAddress(asset),
-    ethereum.Value.fromUnsignedBigInt(epoch),
-  ]
-  return changetype<DepositController__getCouponMarketInputCouponKeyStruct>(
-    fixedSizedArray,
-  )
 }
 
 export function createAssetStatus(

@@ -1,6 +1,5 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts'
-
-import { Multicall3 } from '../generated/BondPositionManager/Multicall3'
+import {Multicall3} from "../generated/MarketFactory/Multicall3";
 
 const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11'
 const DEV_CHAIN_ID = BigInt.fromI32(7777)
