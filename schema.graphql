@@ -91,5 +91,4 @@ type Depth @entity {
   price: BigInt!
   isBid: Boolean!
   rawAmount: BigInt!
-  baseAmount: BigInt!
 }
