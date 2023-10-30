@@ -46,15 +46,9 @@ export function handleNFTTransfer(event: Transfer): void {
 
     rawAmount = orderBookContract.getDepth(bidSide, priceIndex)
     depth.rawAmount = rawAmount
-    depth.baseAmount = bidSide
-      ? orderBookContract.rawToQuote(rawAmount)
-      : orderBookContract.rawToBase(rawAmount, priceIndex, false)
   } else {
     rawAmount = orderBookContract.getDepth(bidSide, priceIndex)
     depth.rawAmount = rawAmount
-    depth.baseAmount = bidSide
-      ? orderBookContract.rawToQuote(rawAmount)
-      : orderBookContract.rawToBase(rawAmount, priceIndex, false)
   }
 
   if (rawAmount.equals(BigInt.zero())) {

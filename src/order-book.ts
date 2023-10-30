@@ -26,10 +26,6 @@ export function handleTakeOrder(event: TakeOrder): void {
     priceIndex,
   )
   depth.rawAmount = rawAmount
-  depth.baseAmount =
-    isTakingBidSide === 1
-      ? orderBookContract.rawToQuote(rawAmount)
-      : orderBookContract.rawToBase(rawAmount, priceIndex, false)
 
   if (rawAmount.equals(BigInt.zero())) {
     store.remove('Depth', depthId)
