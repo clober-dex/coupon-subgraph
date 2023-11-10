@@ -32,7 +32,7 @@ dataSources:
       eventHandlers:
         - event: RegisterAsset(indexed address)
           handler: handleRegisterAsset
-        - event: UpdatePosition(indexed uint256,uint256,uint8)
+        - event: UpdatePosition(indexed uint256,uint256,uint16)
           handler: handleUpdateBondPosition
           receipt: true
         - event: Transfer(indexed address,indexed address,indexed uint256)
@@ -69,7 +69,7 @@ dataSources:
         - event: SetLoanConfiguration(indexed address,indexed
             address,uint32,uint32,uint32,uint32,address)
           handler: handleSetLoanConfiguration
-        - event: UpdatePosition(indexed uint256,uint256,uint256,uint8)
+        - event: UpdatePosition(indexed uint256,uint256,uint256,uint16)
           handler: handleUpdateLoanPosition
           receipt: true
         - event: Transfer(indexed address,indexed address,indexed uint256)
