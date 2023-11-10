@@ -149,9 +149,11 @@ export function getEpochIndex(couponAddress: Address): BigInt {
 
 export function getStartTimestamp(epochIndex: BigInt): BigInt {
   const _epochIndex = epochIndex.toU64()
-  const startYear = (1970 + _epochIndex / 2).toString()
-  const startQuarter = _epochIndex % 2 ? '07-01' : '01-01'
-  const startDate = Date.fromString(startYear.concat('-').concat(startQuarter))
+  const startYear = (1970 + _epochIndex / 12).toString()
+  const startMonth = ((_epochIndex % 12) + 1).toString().padStart(2, '0')
+  const startDate = Date.fromString(
+    startYear.concat('-').concat(startMonth).concat('-01'),
+  )
 
   return BigInt.fromI64(startDate.getTime() / 1000)
 }
@@ -165,6 +167,6 @@ export function getEndTimestamp(epochIndex: BigInt): BigInt {
 export function getEpochIndexByTimestamp(timestamp: BigInt): BigInt {
   const date = new Date(timestamp.toI64() * 1000)
   const year = date.getUTCFullYear()
-  const half = Date.fromString(year.toString().concat('-07-01')).getTime()
-  return BigInt.fromI32((year - 1970) * 2 + (date.getTime() < half ? 0 : 1))
+  const month = date.getUTCMonth()
+  return BigInt.fromI32((year - 1970) * 12 + month)
 }
