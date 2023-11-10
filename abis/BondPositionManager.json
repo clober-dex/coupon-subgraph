@@ -1,7 +1,38 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "coupon_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "assetPool_",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "baseURI_",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "contractURI_",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "inputs": [],
     "name": "AlreadyExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "EpochOverflow",
     "type": "error"
   },
   {
@@ -12,6 +43,16 @@
   {
     "inputs": [],
     "name": "InvalidEpoch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidPositionEpoch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidShortString",
     "type": "error"
   },
   {
@@ -38,6 +79,22 @@
   {
     "inputs": [],
     "name": "PermitExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "str",
+        "type": "string"
+      }
+    ],
+    "name": "StringTooLong",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnmatchedPosition",
     "type": "error"
   },
   {
@@ -97,6 +154,50 @@
   },
   {
     "anonymous": false,
+    "inputs": [],
+    "name": "EIP712DomainChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
     "inputs": [
       {
         "indexed": true,
@@ -152,7 +253,7 @@
         "indexed": false,
         "internalType": "Epoch",
         "name": "expiredWith",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "UpdatePosition",
@@ -177,8 +278,8 @@
     "outputs": [
       {
         "internalType": "Epoch",
-        "name": "maxEpoch",
-        "type": "uint8"
+        "name": "",
+        "type": "uint16"
       }
     ],
     "stateMutability": "view",
@@ -194,14 +295,21 @@
         "type": "bytes32"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "acceptOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "positionId",
         "type": "uint256"
       },
       {
@@ -212,7 +320,7 @@
       {
         "internalType": "Epoch",
         "name": "expiredWith",
-        "type": "uint8"
+        "type": "uint16"
       }
     ],
     "name": "adjustPosition",
@@ -229,7 +337,7 @@
               {
                 "internalType": "Epoch",
                 "name": "epoch",
-                "type": "uint8"
+                "type": "uint16"
               }
             ],
             "internalType": "struct CouponKey",
@@ -258,7 +366,7 @@
               {
                 "internalType": "Epoch",
                 "name": "epoch",
-                "type": "uint8"
+                "type": "uint16"
               }
             ],
             "internalType": "struct CouponKey",
@@ -319,7 +427,7 @@
     "outputs": [
       {
         "internalType": "int256",
-        "name": "",
+        "name": "delta",
         "type": "int256"
       }
     ],
@@ -351,7 +459,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "balance",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -385,7 +493,7 @@
               {
                 "internalType": "Epoch",
                 "name": "epoch",
-                "type": "uint8"
+                "type": "uint16"
               }
             ],
             "internalType": "struct CouponKey",
@@ -409,6 +517,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "contractURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -427,6 +548,49 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "eip712Domain",
+    "outputs": [
+      {
+        "internalType": "bytes1",
+        "name": "fields",
+        "type": "bytes1"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "version",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "verifyingContract",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "extensions",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -438,7 +602,7 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "operator",
+        "name": "",
         "type": "address"
       }
     ],
@@ -449,7 +613,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "positionId",
         "type": "uint256"
       }
     ],
@@ -470,7 +634,7 @@
           {
             "internalType": "Epoch",
             "name": "expiredWith",
-            "type": "uint8"
+            "type": "uint16"
           },
           {
             "internalType": "bool",
@@ -546,7 +710,7 @@
     "outputs": [
       {
         "internalType": "bytes",
-        "name": "",
+        "name": "result",
         "type": "bytes"
       }
     ],
@@ -604,7 +768,7 @@
               {
                 "internalType": "Epoch",
                 "name": "epoch",
-                "type": "uint8"
+                "type": "uint16"
               }
             ],
             "internalType": "struct CouponKey",
@@ -667,7 +831,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "positionId",
         "type": "uint256"
       }
     ],
@@ -677,6 +841,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -694,7 +871,20 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "owner",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingOwner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
         "type": "address"
       }
     ],
@@ -736,7 +926,7 @@
     ],
     "name": "permit",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -748,6 +938,13 @@
       }
     ],
     "name": "registerAsset",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -904,6 +1101,19 @@
       }
     ],
     "name": "transferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
