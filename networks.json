@@ -1,11 +1,11 @@
 {
   "localhost": {
     "BondPositionManager": {
-      "address": "0x98C0a86096b508Fae31Ba2aF94E4EDcc29D8001E",
+      "address": "0x3A2e22044b0d86ddb59B1baF4Cd1c047c4Bf99D9",
       "startBlock": 148955360
     },
     "LoanPositionManager": {
-      "address": "0xa87224d1F96cA183CE119f94b6e48035c93B05Fb",
+      "address": "0xA0D476c6A39beA239749C566a02343e5584Ec200",
       "startBlock": 148955360
     },
     "MarketFactory": {
