@@ -1,11 +1,11 @@
-import { Address, BigInt, store, ethereum } from '@graphprotocol/graph-ts'
+import { Address, BigInt, ethereum, store } from '@graphprotocol/graph-ts'
 
 import {
+  LiquidatePosition,
   LoanPositionManager as LoanPositionManagerContract,
   SetLoanConfiguration,
-  UpdatePosition,
   Transfer,
-  LiquidatePosition,
+  UpdatePosition,
 } from '../generated/LoanPositionManager/LoanPositionManager'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
@@ -91,14 +91,23 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.principal = BigInt.zero()
     loanPosition.collateralAmount = BigInt.zero()
     loanPosition.liquidationRepaidAmount = BigInt.zero()
+    loanPosition.createdAt = event.block.timestamp
+    loanPosition.fromEpoch = createEpoch(
+      getEpochIndexByTimestamp(event.block.timestamp),
+    ).id
+    loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
   }
-  const previousAmount = loanPosition.amount
-  const previousCollateralAmount = loanPosition.collateralAmount
+  const prevDebtAmount = loanPosition.amount
+  const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
+  const collateralAmountDelta = event.params.collateralAmount.minus(
+    loanPosition.collateralAmount,
+  )
+  const prevToEpoch = BigInt.fromString(loanPosition.toEpoch).toI32()
 
-  let mightBeDeleted = false
-  if (event.params.debtAmount.equals(BigInt.zero())) {
-    mightBeDeleted = true
-  } else {
+  const shouldRemove =
+    event.params.collateralAmount.equals(BigInt.zero()) &&
+    event.params.debtAmount.equals(BigInt.zero())
+  if (!shouldRemove) {
     loanPosition.user = loanPositionManager.ownerOf(positionId).toHexString()
     loanPosition.collateral = position.collateralToken
       .toHexString()
@@ -106,50 +115,68 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .concat(position.debtToken.toHexString())
     loanPosition.collateralAmount = position.collateralAmount
     loanPosition.principal = loanPosition.principal
-      .plus(event.params.debtAmount)
-      .minus(loanPosition.amount)
+      .plus(debtAmountDelta)
       .plus(soldAmount)
       .minus(boughtAmount)
     loanPosition.amount = event.params.debtAmount
-    loanPosition.fromEpoch = createEpoch(
-      getEpochIndexByTimestamp(event.block.timestamp),
-    ).id
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
     loanPosition.substitute = position.debtToken.toHexString()
     loanPosition.underlying = AssetContract.bind(position.debtToken)
       .underlyingToken()
       .toHexString()
-    loanPosition.createdAt = event.block.timestamp
+    loanPosition.updatedAt = event.block.timestamp
     loanPosition.save()
   }
 
   const collateral = Collateral.load(loanPosition.collateral)
   if (collateral) {
-    collateral.totalCollateralized = collateral.totalCollateralized
-      .plus(loanPosition.collateralAmount)
-      .minus(previousCollateralAmount)
-    collateral.totalBorrowed = collateral.totalBorrowed
-      .plus(loanPosition.amount)
-      .minus(previousAmount)
+    collateral.totalCollateralized = collateral.totalCollateralized.plus(
+      collateralAmountDelta,
+    )
+    collateral.totalBorrowed = collateral.totalBorrowed.plus(debtAmountDelta)
     collateral.save()
   }
 
+  const toEpoch = BigInt.fromString(loanPosition.toEpoch).toI32()
   for (
     let epochIndex = BigInt.fromString(loanPosition.fromEpoch).toI32();
-    epochIndex <= BigInt.fromString(loanPosition.toEpoch).toI32();
+    epochIndex <= max(toEpoch, prevToEpoch);
     epochIndex++
   ) {
     const assetStatusKey = loanPosition.underlying
       .concat('-')
       .concat(epochIndex.toString())
     const assetStatus = AssetStatus.load(assetStatusKey) as AssetStatus
-    assetStatus.totalBorrowed = assetStatus.totalBorrowed
-      .minus(previousAmount)
-      .plus(loanPosition.amount)
+
+    const epochDelta = toEpoch - prevToEpoch
+    if (epochDelta < 0) {
+      // epoch decreased
+      if (epochIndex > toEpoch) {
+        assetStatus.totalBorrowed =
+          assetStatus.totalBorrowed.minus(prevDebtAmount)
+      } else {
+        assetStatus.totalBorrowed =
+          assetStatus.totalBorrowed.plus(debtAmountDelta)
+      }
+    } else if (epochDelta > 0) {
+      // epoch increased
+      if (epochIndex > prevToEpoch) {
+        assetStatus.totalBorrowed = assetStatus.totalBorrowed.plus(
+          loanPosition.amount,
+        )
+      } else {
+        assetStatus.totalBorrowed =
+          assetStatus.totalBorrowed.plus(debtAmountDelta)
+      }
+    } else {
+      // epoch unchanged
+      assetStatus.totalBorrowed =
+        assetStatus.totalBorrowed.plus(debtAmountDelta)
+    }
     assetStatus.save()
   }
 
-  if (mightBeDeleted) {
+  if (shouldRemove) {
     store.remove('LoanPosition', positionId.toString())
   }
 }
