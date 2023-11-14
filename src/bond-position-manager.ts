@@ -66,15 +66,12 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     bondPosition.amount = BigInt.zero()
     bondPosition.principal = BigInt.zero()
   }
-  const previousAmount = bondPosition.amount
-  let mightBeDeleted = false
-  if (event.params.amount.equals(BigInt.zero())) {
-    mightBeDeleted = true
-  } else {
+  const amountDelta = event.params.amount.minus(bondPosition.amount)
+  const shouldRemove = event.params.amount.equals(BigInt.zero())
+  if (!shouldRemove) {
     bondPosition.user = bondPositionManager.ownerOf(tokenId).toHexString()
     bondPosition.principal = bondPosition.principal
-      .plus(event.params.amount)
-      .minus(bondPosition.amount)
+      .plus(amountDelta)
       .plus(boughtAmount)
       .minus(soldAmount)
     bondPosition.amount = event.params.amount
@@ -99,13 +96,11 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
       .concat('-')
       .concat(epochIndex.toString())
     const assetStatus = AssetStatus.load(assetStatusKey) as AssetStatus
-    assetStatus.totalDeposited = assetStatus.totalDeposited
-      .minus(previousAmount)
-      .plus(bondPosition.amount)
+    assetStatus.totalDeposited = assetStatus.totalDeposited.plus(amountDelta)
     assetStatus.save()
   }
 
-  if (mightBeDeleted) {
+  if (shouldRemove) {
     store.remove('BondPosition', tokenId.toString())
   }
 }

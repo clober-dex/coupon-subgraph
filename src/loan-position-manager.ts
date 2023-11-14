@@ -90,13 +90,13 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.principal = BigInt.zero()
     loanPosition.collateralAmount = BigInt.zero()
   }
-  const previousAmount = loanPosition.amount
-  const previousCollateralAmount = loanPosition.collateralAmount
+  const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
+  const collateralAmountDelta = event.params.collateralAmount.minus(
+    loanPosition.collateralAmount,
+  )
 
-  let mightBeDeleted = false
-  if (event.params.debtAmount.equals(BigInt.zero())) {
-    mightBeDeleted = true
-  } else {
+  const shouldRemove = event.params.debtAmount.equals(BigInt.zero())
+  if (!shouldRemove) {
     loanPosition.user = loanPositionManager.ownerOf(positionId).toHexString()
     loanPosition.collateral = position.collateralToken
       .toHexString()
@@ -104,8 +104,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .concat(position.debtToken.toHexString())
     loanPosition.collateralAmount = position.collateralAmount
     loanPosition.principal = loanPosition.principal
-      .plus(event.params.debtAmount)
-      .minus(loanPosition.amount)
+      .plus(debtAmountDelta)
       .plus(soldAmount)
       .minus(boughtAmount)
     loanPosition.amount = event.params.debtAmount
@@ -123,12 +122,10 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
 
   const collateral = Collateral.load(loanPosition.collateral)
   if (collateral) {
-    collateral.totalCollateralized = collateral.totalCollateralized
-      .plus(loanPosition.collateralAmount)
-      .minus(previousCollateralAmount)
-    collateral.totalBorrowed = collateral.totalBorrowed
-      .plus(loanPosition.amount)
-      .minus(previousAmount)
+    collateral.totalCollateralized = collateral.totalCollateralized.plus(
+      collateralAmountDelta,
+    )
+    collateral.totalBorrowed = collateral.totalBorrowed.plus(debtAmountDelta)
     collateral.save()
   }
 
@@ -141,13 +138,11 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .concat('-')
       .concat(epochIndex.toString())
     const assetStatus = AssetStatus.load(assetStatusKey) as AssetStatus
-    assetStatus.totalBorrowed = assetStatus.totalBorrowed
-      .minus(previousAmount)
-      .plus(loanPosition.amount)
+    assetStatus.totalBorrowed = assetStatus.totalBorrowed.plus(debtAmountDelta)
     assetStatus.save()
   }
 
-  if (mightBeDeleted) {
+  if (shouldRemove) {
     store.remove('LoanPosition', positionId.toString())
   }
 }
