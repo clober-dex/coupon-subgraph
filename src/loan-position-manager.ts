@@ -96,10 +96,12 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       getEpochIndexByTimestamp(event.block.timestamp),
     ).id
   }
+  const prevDebtAmount = loanPosition.amount
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
   const collateralAmountDelta = event.params.collateralAmount.minus(
     loanPosition.collateralAmount,
   )
+  const prevToEpoch = BigInt.fromString(loanPosition.toEpoch).toI32()
 
   const shouldRemove =
     event.params.collateralAmount.equals(BigInt.zero()) &&
@@ -134,16 +136,42 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     collateral.save()
   }
 
+  const toEpoch = BigInt.fromString(loanPosition.toEpoch).toI32()
   for (
     let epochIndex = BigInt.fromString(loanPosition.fromEpoch).toI32();
-    epochIndex <= BigInt.fromString(loanPosition.toEpoch).toI32();
+    epochIndex <= max(toEpoch, prevToEpoch);
     epochIndex++
   ) {
     const assetStatusKey = loanPosition.underlying
       .concat('-')
       .concat(epochIndex.toString())
     const assetStatus = AssetStatus.load(assetStatusKey) as AssetStatus
-    assetStatus.totalBorrowed = assetStatus.totalBorrowed.plus(debtAmountDelta)
+
+    const epochDelta = toEpoch - epochIndex
+    if (epochDelta < 0) {
+      // epoch decreased
+      if (epochIndex > toEpoch) {
+        assetStatus.totalBorrowed =
+          assetStatus.totalBorrowed.minus(prevDebtAmount)
+      } else {
+        assetStatus.totalBorrowed =
+          assetStatus.totalBorrowed.plus(debtAmountDelta)
+      }
+    } else if (epochDelta > 0) {
+      // epoch increased
+      if (epochIndex > prevToEpoch) {
+        assetStatus.totalBorrowed = assetStatus.totalBorrowed.plus(
+          loanPosition.amount,
+        )
+      } else {
+        assetStatus.totalBorrowed =
+          assetStatus.totalBorrowed.plus(debtAmountDelta)
+      }
+    } else {
+      // epoch unchanged
+      assetStatus.totalBorrowed =
+        assetStatus.totalBorrowed.plus(debtAmountDelta)
+    }
     assetStatus.save()
   }
 
