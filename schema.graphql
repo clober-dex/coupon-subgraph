@@ -79,6 +79,7 @@ type Market @entity {
   r: BigInt!
   d: BigInt!
   epoch: Epoch!
+  couponId: BigInt!
 
   depths: [Depth!]! @derivedFrom(field: "market")
 }

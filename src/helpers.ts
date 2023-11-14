@@ -147,6 +147,15 @@ export function getEpochIndex(couponAddress: Address): BigInt {
   return couponId.value.rightShift(160)
 }
 
+export function getCouponId(couponAddress: Address): BigInt {
+  const couponContract = Wrapped1155Metadata.bind(couponAddress)
+  const couponId = couponContract.try_tokenId()
+  if (couponId.reverted) {
+    return BigInt.fromI64(0)
+  }
+  return couponId.value
+}
+
 export function getStartTimestamp(epochIndex: BigInt): BigInt {
   const _epochIndex = epochIndex.toU64()
   const startYear = (1970 + _epochIndex / 12).toString()
