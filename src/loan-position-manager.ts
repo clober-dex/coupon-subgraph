@@ -95,6 +95,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.fromEpoch = createEpoch(
       getEpochIndexByTimestamp(event.block.timestamp),
     ).id
+    loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
   }
   const prevDebtAmount = loanPosition.amount
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
