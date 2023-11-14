@@ -14,6 +14,7 @@ import {
   createAssetStatus,
   createEpoch,
   createToken,
+  getCouponId,
   getEpochIndex,
 } from './helpers'
 import { getCouponMarketDeployerAddress } from './addresses'
@@ -27,10 +28,11 @@ export function handleCreateStableMarket(event: CreateStableMarket): void {
   ) {
     return
   }
-
+  const couponId = getCouponId(event.params.baseToken)
   const quoteToken = createToken(event.params.quoteToken)
   const baseToken = createToken(event.params.baseToken)
   const market = new Market(event.params.market.toHexString()) as Market
+  market.couponId = couponId
   market.orderToken = event.params.orderToken
   market.baseToken = baseToken.id
   market.quoteToken = quoteToken.id
@@ -64,10 +66,11 @@ export function handleCreateVolatileMarket(event: CreateVolatileMarket): void {
   ) {
     return
   }
-
+  const couponId = getCouponId(event.params.baseToken)
   const quoteToken = createToken(event.params.quoteToken)
   const baseToken = createToken(event.params.baseToken)
   const market = new Market(event.params.market.toHexString()) as Market
+  market.couponId = couponId
   market.orderToken = event.params.orderToken
   market.baseToken = baseToken.id
   market.quoteToken = quoteToken.id
