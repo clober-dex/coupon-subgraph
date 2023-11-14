@@ -47,6 +47,7 @@ type BondPosition @entity {
   fromEpoch: Epoch!
   toEpoch: Epoch!
   createdAt: BigInt!
+  updatedAt: BigInt!
 }
 
 type LoanPosition @entity {
@@ -61,6 +62,7 @@ type LoanPosition @entity {
   fromEpoch: Epoch!
   toEpoch: Epoch!
   createdAt: BigInt!
+  updatedAt: BigInt!
 }
 
 

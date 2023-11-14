@@ -89,6 +89,10 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.amount = BigInt.zero()
     loanPosition.principal = BigInt.zero()
     loanPosition.collateralAmount = BigInt.zero()
+    loanPosition.createdAt = event.block.timestamp
+    loanPosition.fromEpoch = createEpoch(
+      getEpochIndexByTimestamp(event.block.timestamp),
+    ).id
   }
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
   const collateralAmountDelta = event.params.collateralAmount.minus(
@@ -108,15 +112,12 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .plus(soldAmount)
       .minus(boughtAmount)
     loanPosition.amount = event.params.debtAmount
-    loanPosition.fromEpoch = createEpoch(
-      getEpochIndexByTimestamp(event.block.timestamp),
-    ).id
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
     loanPosition.substitute = position.debtToken.toHexString()
     loanPosition.underlying = AssetContract.bind(position.debtToken)
       .underlyingToken()
       .toHexString()
-    loanPosition.createdAt = event.block.timestamp
+    loanPosition.updatedAt = event.block.timestamp
     loanPosition.save()
   }
 

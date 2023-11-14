@@ -65,6 +65,10 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     bondPosition = new BondPosition(tokenId.toString())
     bondPosition.amount = BigInt.zero()
     bondPosition.principal = BigInt.zero()
+    bondPosition.createdAt = event.block.timestamp
+    bondPosition.fromEpoch = createEpoch(
+      getEpochIndexByTimestamp(event.block.timestamp),
+    ).id
   }
   const amountDelta = event.params.amount.minus(bondPosition.amount)
   const shouldRemove = event.params.amount.equals(BigInt.zero())
@@ -75,15 +79,12 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
       .plus(boughtAmount)
       .minus(soldAmount)
     bondPosition.amount = event.params.amount
-    bondPosition.fromEpoch = createEpoch(
-      getEpochIndexByTimestamp(event.block.timestamp),
-    ).id
     bondPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
     bondPosition.substitute = position.asset.toHexString()
     bondPosition.underlying = AssetContract.bind(position.asset)
       .underlyingToken()
       .toHexString()
-    bondPosition.createdAt = event.block.timestamp
+    bondPosition.updatedAt = event.block.timestamp
     bondPosition.save()
   }
 
