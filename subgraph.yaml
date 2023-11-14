@@ -74,6 +74,8 @@ dataSources:
           receipt: true
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleLoanPositionTransfer
+        - event: LiquidatePosition(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleLiquidatePosition
       file: ./src/loan-position-manager.ts
   - kind: ethereum
     name: MarketFactory

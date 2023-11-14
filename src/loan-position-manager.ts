@@ -5,6 +5,7 @@ import {
   SetLoanConfiguration,
   UpdatePosition,
   Transfer,
+  LiquidatePosition,
 } from '../generated/LoanPositionManager/LoanPositionManager'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
@@ -89,6 +90,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.amount = BigInt.zero()
     loanPosition.principal = BigInt.zero()
     loanPosition.collateralAmount = BigInt.zero()
+    loanPosition.liquidationRepaidAmount = BigInt.zero()
     loanPosition.createdAt = event.block.timestamp
     loanPosition.fromEpoch = createEpoch(
       getEpochIndexByTimestamp(event.block.timestamp),
@@ -160,4 +162,14 @@ export function handleLoanPositionTransfer(event: Transfer): void {
       .toHexString()
     loanPosition.save()
   }
+}
+
+export function handleLiquidatePosition(event: LiquidatePosition): void {
+  const loanPosition = LoanPosition.load(event.params.positionId.toString())
+  if (loanPosition === null) {
+    return
+  }
+  loanPosition.liquidationRepaidAmount =
+    loanPosition.liquidationRepaidAmount.plus(event.params.repayAmount)
+  loanPosition.save()
 }

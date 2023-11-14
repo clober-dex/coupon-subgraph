@@ -56,6 +56,7 @@ type LoanPosition @entity {
   collateral: Collateral!
   collateralAmount: BigInt!
   amount: BigInt!
+  liquidationRepaidAmount: BigInt!
   principal: BigInt!
   substitute: Token!
   underlying: Token!
