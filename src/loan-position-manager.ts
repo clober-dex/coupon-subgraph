@@ -121,14 +121,14 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.save()
   }
 
-  let collateral = Collateral.load(loanPosition.collateral)
+  const collateral = Collateral.load(loanPosition.collateral)
   if (collateral) {
     collateral.totalCollateralized = collateral.totalCollateralized
-        .plus(loanPosition.collateralAmount)
-        .minus(previousCollateralAmount)
+      .plus(loanPosition.collateralAmount)
+      .minus(previousCollateralAmount)
     collateral.totalBorrowed = collateral.totalBorrowed
-        .plus(loanPosition.amount)
-        .minus(previousAmount)
+      .plus(loanPosition.amount)
+      .minus(previousAmount)
     collateral.save()
   }
 
