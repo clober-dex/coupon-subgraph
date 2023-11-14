@@ -101,7 +101,9 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.collateralAmount,
   )
 
-  const shouldRemove = event.params.debtAmount.equals(BigInt.zero())
+  const shouldRemove =
+    event.params.collateralAmount.equals(BigInt.zero()) &&
+    event.params.debtAmount.equals(BigInt.zero())
   if (!shouldRemove) {
     loanPosition.user = loanPositionManager.ownerOf(positionId).toHexString()
     loanPosition.collateral = position.collateralToken
