@@ -1,11 +1,11 @@
-import { Address, BigInt, store, ethereum } from '@graphprotocol/graph-ts'
+import { Address, BigInt, ethereum, store } from '@graphprotocol/graph-ts'
 
 import {
+  LiquidatePosition,
   LoanPositionManager as LoanPositionManagerContract,
   SetLoanConfiguration,
-  UpdatePosition,
   Transfer,
-  LiquidatePosition,
+  UpdatePosition,
 } from '../generated/LoanPositionManager/LoanPositionManager'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
@@ -148,7 +148,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .concat(epochIndex.toString())
     const assetStatus = AssetStatus.load(assetStatusKey) as AssetStatus
 
-    const epochDelta = toEpoch - epochIndex
+    const epochDelta = toEpoch - prevToEpoch
     if (epochDelta < 0) {
       // epoch decreased
       if (epochIndex > toEpoch) {
