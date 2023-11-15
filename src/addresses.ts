@@ -14,7 +14,6 @@ export function getCouponMarketDeployerAddress(): string {
   } else if (chainId == TEST_CHAIN_ID) {
     return '0xa0e3174f4d222c5cbf705a138c6a9369935eed81'
   } else {
-    // TODO: Update this address
-    return '0x0000000000000000000000000000000000000000'
+    return '0x1f88547fc4e1dc1a924aeaade65108eeb9ddeed4'
   }
 }
