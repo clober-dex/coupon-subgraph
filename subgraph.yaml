@@ -4,11 +4,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: BondPositionManager
-    network: localhost
+    network: arbitrum-one
     source:
       abi: BondPositionManager
-      address: "0x3A2e22044b0d86ddb59B1baF4Cd1c047c4Bf99D9"
-      startBlock: 148955371
+      address: "0x0Cf91Bc7a67B063142C029a69fF9C8ccd93476E2"
+      startBlock: 150536528
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -40,11 +40,11 @@ dataSources:
       file: ./src/bond-position-manager.ts
   - kind: ethereum
     name: LoanPositionManager
-    network: localhost
+    network: arbitrum-one
     source:
       abi: LoanPositionManager
-      address: "0xA0D476c6A39beA239749C566a02343e5584Ec200"
-      startBlock: 148955372
+      address: "0x03d65411684ae7B5440E11a6063881a774C733dF"
+      startBlock: 150536540
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -74,16 +74,17 @@ dataSources:
           receipt: true
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleLoanPositionTransfer
-        - event: LiquidatePosition(indexed uint256,indexed address,uint256,uint256,uint256)
+        - event: LiquidatePosition(indexed uint256,indexed
+            address,uint256,uint256,uint256)
           handler: handleLiquidatePosition
       file: ./src/loan-position-manager.ts
   - kind: ethereum
     name: MarketFactory
-    network: localhost
+    network: arbitrum-one
     source:
       abi: MarketFactory
       address: "0x24aC0938C010Fb520F1068e96d78E0458855111D"
-      startBlock: 148955360
+      startBlock: 150534217
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -121,7 +122,7 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: OrderNFT
-    network: localhost
+    network: arbitrum-one
     source:
       abi: OrderNFT
     mapping:
@@ -141,7 +142,7 @@ templates:
       file: ./src/order-nft.ts
   - kind: ethereum/contract
     name: OrderBook
-    network: localhost
+    network: arbitrum-one
     source:
       abi: OrderBook
     mapping:

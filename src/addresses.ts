@@ -1,5 +1,6 @@
 import { Address, BigInt } from '@graphprotocol/graph-ts'
-import {Multicall3} from "../generated/MarketFactory/Multicall3";
+
+import { Multicall3 } from '../generated/MarketFactory/Multicall3'
 
 const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11'
 const DEV_CHAIN_ID = BigInt.fromI32(7777)
@@ -13,7 +14,6 @@ export function getCouponMarketDeployerAddress(): string {
   } else if (chainId == TEST_CHAIN_ID) {
     return '0xa0e3174f4d222c5cbf705a138c6a9369935eed81'
   } else {
-    // TODO: Update this address
-    return '0x0000000000000000000000000000000000000000'
+    return '0x1f88547fc4e1dc1a924aeaade65108eeb9ddeed4'
   }
 }
