@@ -11,6 +11,7 @@
     "create-testnet": "dotenv -e .env -- cross-var graph create --access-token=%ACCESS_TOKEN% --node http://testnet-subgraph.coupon.finance:8020/ coupon-subgraph",
     "deploy-local": "dotenv -e .env -- cross-var graph deploy --access-token=%ACCESS_TOKEN% --node http://localhost:8020/ --ipfs http://localhost:5001 coupon-subgraph --network localhost",
     "deploy-devnet": "dotenv -e .env -- cross-var graph deploy --access-token=%ACCESS_TOKEN% --node http://dev-subgraph.coupon.finance:8020/ --ipfs http://dev-subgraph.coupon.finance:5001 coupon-subgraph --network localhost",
+    "deploy-arbitrum": "dotenv -e .env -- cross-var graph deploy coupon-subgraph --version-label %DEPLOY_VERSION% --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key %DEPLOY_KEY% --ipfs https://ipfs.satsuma.xyz --network arbitrum-one",
     "deploy-testnet": "dotenv -e .env -- cross-var graph deploy --access-token=%ACCESS_TOKEN% --node http://testnet-subgraph.coupon.finance:8020/ --ipfs http://testnet-subgraph.coupon.finance:5001 coupon-subgraph --network arbitrum-goerli",
     "remove-local": "graph remove --node http://localhost:8020/ coupon-subgraph",
     "remove-devnet": "graph remove --node http://dev-subgraph.coupon.finance:8020/ coupon-subgraph",
