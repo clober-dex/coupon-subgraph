@@ -15,16 +15,16 @@
   },
   "arbitrum-goerli" : {
     "BondPositionManager": {
-      "address": "0x06ad1569cc3f430D16f906D21Cd2D1DA6eCA8e48",
-      "startBlock": 37846277
+      "address": "0xDBb7d68dDB3E5966a401d94E93D84B65E4D26e97",
+      "startBlock": 56001711
     },
     "LoanPositionManager": {
-      "address": "0xDAC1D90536df1390E599534B6A6F5Fe35c907e20",
-      "startBlock": 37846286
+      "address": "0x4c856a264EE234e3DcFDEecEcfFC34ec203dF4f2",
+      "startBlock": 56001753
     },
     "MarketFactory": {
       "address": "0x110f5cBC51576fDa2E8024155F772c494f421E11",
-      "startBlock": 37841251
+      "startBlock": 56004936
     }
   },
   "arbitrum-one": {
