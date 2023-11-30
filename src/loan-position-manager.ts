@@ -4,6 +4,7 @@ import {
   Bytes,
   ethereum,
   store,
+  log,
 } from '@graphprotocol/graph-ts'
 
 import {
@@ -105,13 +106,15 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.isLeveraged = false
 
     if (event.transaction.input.toHexString().slice(0, 10) == '0xcc84c6b9') {
+      // parse with `ethabi decode params -t`
       const decoded = ethereum.decode(
         '(address,address,uint256,uint256,uint256,uint16,(address,uint256,bytes32),(uint256,(uint256,uint8,bytes32,bytes32)))',
         Bytes.fromHexString(event.transaction.input.toHexString().slice(10)),
       )
       if (decoded) {
         const data = decoded.toTuple()
-        const swapAmount = data[6].toTuple()[1].toBigInt()
+        const swapData = data[7].toTuple()[3].toTuple()
+        const swapAmount = swapData[1].toBigInt()
         if (swapAmount.gt(BigInt.zero())) {
           loanPosition.isLeveraged = true
         }
