@@ -18,6 +18,7 @@ import {
   createToken,
   getEpochIndexByTimestamp,
 } from './helpers'
+import { ETH_UNDERLYING_ADDRESS } from './addresses'
 
 export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
   createToken(event.params.collateral)
@@ -134,26 +135,58 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
         log.topics[0].toHexString() ==
         '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
     )
-    let erc20Value = BigInt.fromI32(0)
+    let inCollateralAmount = BigInt.fromI32(0)
+    let outCollateralAmount = BigInt.fromI32(0)
     const collateralUnderlyingAddress = AssetContract.bind(
       position.collateralToken,
     ).underlyingToken()
     for (let i = 0; i < transferEvents.length; i++) {
       const decoded = ethereum.decode('uint256', transferEvents[i].data)
       const from = ethereum.decode('address', transferEvents[i].topics[1])
-      if (decoded && from) {
+      const to = ethereum.decode('address', transferEvents[i].topics[2])
+      if (decoded && from && to) {
         if (
           from.toAddress() == event.transaction.from &&
           transferEvents[i].address == collateralUnderlyingAddress
         ) {
-          erc20Value = erc20Value.plus(decoded.toBigInt())
+          inCollateralAmount = inCollateralAmount.plus(decoded.toBigInt())
+        } else if (
+          to.toAddress() == event.transaction.from &&
+          transferEvents[i].address == collateralUnderlyingAddress
+        ) {
+          outCollateralAmount = outCollateralAmount.plus(decoded.toBigInt())
         }
       }
     }
-    loanPosition.borrowedCollateralAmount =
-      loanPosition.borrowedCollateralAmount.plus(
-        collateralAmountDelta.minus(event.transaction.value.plus(erc20Value)),
-      )
+    if (collateralAmountDelta.gt(BigInt.zero())) {
+      let paidCollateralFromUser = inCollateralAmount
+      if (
+        collateralUnderlyingAddress.toHexString().toLowerCase() ==
+        ETH_UNDERLYING_ADDRESS.toLowerCase()
+      ) {
+        paidCollateralFromUser = paidCollateralFromUser.plus(
+          event.transaction.value,
+        )
+      }
+      loanPosition.borrowedCollateralAmount =
+        loanPosition.borrowedCollateralAmount.plus(
+          collateralAmountDelta.minus(paidCollateralFromUser),
+        )
+    } else if (collateralAmountDelta.lt(BigInt.zero())) {
+      let repaidCollateralToUser = outCollateralAmount
+      if (
+        collateralUnderlyingAddress.toHexString().toLowerCase() ==
+        ETH_UNDERLYING_ADDRESS.toLowerCase()
+      ) {
+        repaidCollateralToUser = repaidCollateralToUser.plus(
+          event.transaction.value, // TODO: replace with something else
+        )
+      }
+      loanPosition.borrowedCollateralAmount =
+        loanPosition.borrowedCollateralAmount.plus(
+          collateralAmountDelta.plus(repaidCollateralToUser),
+        )
+    }
 
     loanPosition.save()
   }
