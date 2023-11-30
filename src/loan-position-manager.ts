@@ -157,8 +157,9 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
         ) {
           outCollateralAmount = outCollateralAmount.plus(decoded.toBigInt())
         } else if (
-          to.toAddress().toHexString() == ADDRESS_ZERO &&
-          transferEvents[i].address.toHexString() == ETH_UNDERLYING_ADDRESS
+          to.toAddress() == Address.fromString(ADDRESS_ZERO) &&
+          transferEvents[i].address ==
+            Address.fromString(ETH_UNDERLYING_ADDRESS)
         ) {
           outETHAmount = outETHAmount.plus(decoded.toBigInt())
         }
@@ -167,8 +168,8 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     if (collateralAmountDelta.gt(BigInt.zero())) {
       let paidCollateralFromUser = inCollateralAmount
       if (
-        collateralUnderlyingAddress.toHexString().toLowerCase() ==
-        ETH_UNDERLYING_ADDRESS.toLowerCase()
+        collateralUnderlyingAddress ==
+        Address.fromString(ETH_UNDERLYING_ADDRESS)
       ) {
         paidCollateralFromUser = paidCollateralFromUser.plus(
           event.transaction.value,
@@ -181,8 +182,8 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     } else if (collateralAmountDelta.lt(BigInt.zero())) {
       let repaidCollateralToUser = outCollateralAmount
       if (
-        collateralUnderlyingAddress.toHexString().toLowerCase() ==
-        ETH_UNDERLYING_ADDRESS.toLowerCase()
+        collateralUnderlyingAddress ==
+        Address.fromString(ETH_UNDERLYING_ADDRESS)
       ) {
         repaidCollateralToUser = repaidCollateralToUser.plus(outETHAmount)
       }
