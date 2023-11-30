@@ -18,7 +18,6 @@ import {
   createToken,
   getEpochIndexByTimestamp,
 } from './helpers'
-import { ETH_UNDERLYING_ADDRESS } from './addresses'
 
 export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
   createToken(event.params.collateral)
