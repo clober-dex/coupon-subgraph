@@ -1,11 +1,4 @@
-import {
-  Address,
-  BigInt,
-  Bytes,
-  ethereum,
-  store,
-  log,
-} from '@graphprotocol/graph-ts'
+import { Address, BigInt, ethereum, store } from '@graphprotocol/graph-ts'
 
 import {
   LiquidatePosition,
@@ -25,6 +18,7 @@ import {
   createToken,
   getEpochIndexByTimestamp,
 } from './helpers'
+import { ETH_UNDERLYING_ADDRESS } from './addresses'
 
 export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
   createToken(event.params.collateral)
@@ -103,23 +97,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       getEpochIndexByTimestamp(event.block.timestamp),
     ).id
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
-    loanPosition.isLeveraged = false
-
-    if (event.transaction.input.toHexString().slice(0, 10) == '0xcc84c6b9') {
-      // parse with `ethabi decode params -t`
-      const decoded = ethereum.decode(
-        '(address,address,uint256,uint256,uint256,uint16,(address,uint256,bytes32),(uint256,(uint256,uint8,bytes32,bytes32)))',
-        Bytes.fromHexString(event.transaction.input.toHexString().slice(10)),
-      )
-      if (decoded) {
-        const data = decoded.toTuple()
-        const swapData = data[7].toTuple()[3].toTuple()
-        const swapAmount = swapData[1].toBigInt()
-        if (swapAmount.gt(BigInt.zero())) {
-          loanPosition.isLeveraged = true
-        }
-      }
-    }
+    loanPosition.borrowedCollateralAmount = BigInt.zero()
   }
   const prevDebtAmount = loanPosition.amount
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
@@ -149,6 +127,72 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .underlyingToken()
       .toHexString()
     loanPosition.updatedAt = event.block.timestamp
+
+    const transferEvents = (
+      event.receipt as ethereum.TransactionReceipt
+    ).logs.filter(
+      (log) =>
+        log.topics[0].toHexString() ==
+        '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+    )
+    let inCollateralAmount = BigInt.fromI32(0)
+    let outCollateralAmount = BigInt.fromI32(0)
+    let outETHAmount = BigInt.fromI32(0)
+    const collateralUnderlyingAddress = AssetContract.bind(
+      position.collateralToken,
+    ).underlyingToken()
+    for (let i = 0; i < transferEvents.length; i++) {
+      const decoded = ethereum.decode('uint256', transferEvents[i].data)
+      const from = ethereum.decode('address', transferEvents[i].topics[1])
+      const to = ethereum.decode('address', transferEvents[i].topics[2])
+      if (decoded && from && to) {
+        if (
+          from.toAddress() == event.transaction.from &&
+          transferEvents[i].address == collateralUnderlyingAddress
+        ) {
+          inCollateralAmount = inCollateralAmount.plus(decoded.toBigInt())
+        } else if (
+          to.toAddress() == event.transaction.from &&
+          transferEvents[i].address == collateralUnderlyingAddress
+        ) {
+          outCollateralAmount = outCollateralAmount.plus(decoded.toBigInt())
+        } else if (
+          to.toAddress() == Address.fromString(ADDRESS_ZERO) &&
+          transferEvents[i].address ==
+            Address.fromString(ETH_UNDERLYING_ADDRESS)
+        ) {
+          outETHAmount = outETHAmount.plus(decoded.toBigInt())
+        }
+      }
+    }
+    if (collateralAmountDelta.gt(BigInt.zero())) {
+      let paidCollateralFromUser = inCollateralAmount
+      if (
+        collateralUnderlyingAddress ==
+        Address.fromString(ETH_UNDERLYING_ADDRESS)
+      ) {
+        paidCollateralFromUser = paidCollateralFromUser.plus(
+          event.transaction.value,
+        )
+      }
+      loanPosition.borrowedCollateralAmount =
+        loanPosition.borrowedCollateralAmount.plus(
+          collateralAmountDelta.minus(paidCollateralFromUser),
+        )
+    } else if (collateralAmountDelta.lt(BigInt.zero())) {
+      let repaidCollateralToUser = outCollateralAmount
+      if (
+        collateralUnderlyingAddress ==
+        Address.fromString(ETH_UNDERLYING_ADDRESS)
+      ) {
+        repaidCollateralToUser = repaidCollateralToUser.plus(outETHAmount)
+      }
+      loanPosition.borrowedCollateralAmount =
+        loanPosition.borrowedCollateralAmount.plus(
+          collateralAmountDelta.plus(repaidCollateralToUser),
+        )
+    }
+
     loanPosition.save()
   }
 
