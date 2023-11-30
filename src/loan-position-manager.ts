@@ -103,48 +103,29 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       getEpochIndexByTimestamp(event.block.timestamp),
     ).id
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
-    loanPosition.isLeveraged = false
     loanPosition.borrowedCollateralAmount = BigInt.zero()
 
-    if (event.transaction.input.toHexString().slice(0, 10) == '0xcc84c6b9') {
-      // parse with `ethabi decode params -t`
+    const transferEvents = (
+      event.receipt as ethereum.TransactionReceipt
+    ).logs.filter(
+      (log) =>
+        log.topics[0].toHexString() ==
+        '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+    )
+    let erc20Value = BigInt.fromI32(0)
+    for (let i = 0; i < transferEvents.length; i++) {
       const decoded = ethereum.decode(
-        '(address,address,uint256,uint256,uint256,uint16,(address,uint256,bytes32),(uint256,(uint256,uint8,bytes32,bytes32)))',
-        Bytes.fromHexString(event.transaction.input.toHexString().slice(10)),
-      )
-      if (decoded) {
-        const data = decoded.toTuple()
-        const swapData = data[7].toTuple()[3].toTuple()
-        const swapAmount = swapData[1].toBigInt()
-        if (swapAmount.gt(BigInt.zero())) {
-          loanPosition.isLeveraged = true
-
-          const transferEvents = (
-            event.receipt as ethereum.TransactionReceipt
-          ).logs.filter(
-            (log) =>
-              log.topics[0].toHexString() ==
-              '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
-          )
-          let erc20Value = BigInt.fromI32(0)
-          for (let i = 0; i < transferEvents.length; i++) {
-            const decoded = ethereum.decode(
-              '(address,address,uint256)',
-              transferEvents[i].data,
-            ) as ethereum.Value
-            const data = decoded.toTuple()
-            const from = data[0].toAddress()
-            if (from == event.transaction.from) {
-              erc20Value = erc20Value.plus(data[2].toBigInt())
-            }
-          }
-          loanPosition.borrowedCollateralAmount =
-            position.collateralAmount.minus(
-              event.transaction.value.plus(erc20Value),
-            )
-        }
+        '(uint256)',
+        transferEvents[i].data,
+      ) as ethereum.Value
+      const from = transferEvents[i].topics[0].toHexString()
+      if (from == event.transaction.from.toHexString()) {
+        erc20Value = erc20Value.plus(decoded.toBigInt())
       }
     }
+    loanPosition.borrowedCollateralAmount = position.collateralAmount.minus(
+      event.transaction.value.plus(erc20Value),
+    )
   }
   const prevDebtAmount = loanPosition.amount
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)

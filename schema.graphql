@@ -64,7 +64,6 @@ type LoanPosition @entity {
   toEpoch: Epoch!
   createdAt: BigInt!
   updatedAt: BigInt!
-  isLeveraged: Boolean!
   borrowedCollateralAmount: BigInt!
 }
 
