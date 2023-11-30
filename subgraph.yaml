@@ -65,6 +65,10 @@ dataSources:
           file: ./abis/ERC20SymbolBytes.json
         - name: ERC20NameBytes
           file: ./abis/ERC20NameBytes.json
+        - name: Multicall3
+          file: ./abis/Multicall3.json
+        - name: CouponOracle
+          file: ./abis/CouponOracle.json
       eventHandlers:
         - event: SetLoanConfiguration(indexed address,indexed
             address,uint32,uint32,uint32,uint32,address)

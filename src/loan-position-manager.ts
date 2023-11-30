@@ -1,4 +1,10 @@
-import { Address, BigInt, ethereum, store } from '@graphprotocol/graph-ts'
+import {
+  Address,
+  BigDecimal,
+  BigInt,
+  ethereum,
+  store,
+} from '@graphprotocol/graph-ts'
 
 import {
   LiquidatePosition,
@@ -10,15 +16,17 @@ import {
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
 import { AssetStatus, Collateral, LoanPosition } from '../generated/schema'
+import { CouponOracle as CouponOracleContract } from '../generated/LoanPositionManager/CouponOracle'
 
 import {
   ADDRESS_ZERO,
   createAsset,
   createEpoch,
   createToken,
+  exponentToBigDecimal,
   getEpochIndexByTimestamp,
 } from './helpers'
-import { ETH_UNDERLYING_ADDRESS } from './addresses'
+import { getCouponOracleAddress } from './addresses'
 
 export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
   createToken(event.params.collateral)
@@ -85,6 +93,20 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
   const loanPositionManager = LoanPositionManagerContract.bind(event.address)
   const position = loanPositionManager.getPosition(positionId)
 
+  const odosSwapEvents = (
+    event.receipt as ethereum.TransactionReceipt
+  ).logs.filter(
+    (log) =>
+      log.topics[0].toHexString() ==
+      '0x823eaf01002d7353fbcadb2ea3305cc46fa35d799cb0914846d185ac06f8ad05',
+  )
+  const decodedOdosSwapEvent =
+    odosSwapEvents.length > 0
+      ? ethereum.decode(
+          '(address,uint256,address,uint256,address,int256,uint32)',
+          odosSwapEvents[0].data,
+        )
+      : null
   let loanPosition = LoanPosition.load(positionId.toString())
   if (loanPosition === null) {
     loanPosition = new LoanPosition(positionId.toString())
@@ -97,7 +119,21 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       getEpochIndexByTimestamp(event.block.timestamp),
     ).id
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
+    loanPosition.isLeveraged = false
     loanPosition.borrowedCollateralAmount = BigInt.zero()
+    const couponOracle = CouponOracleContract.bind(
+      Address.fromString(getCouponOracleAddress()),
+    )
+    const priceDecimals = couponOracle.decimals()
+    loanPosition.entryCollateralCurrencyPrice = BigDecimal.fromString(
+      couponOracle.getAssetPrice(position.collateralToken).toString(),
+    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+    loanPosition.entryDebtCurrencyPrice = BigDecimal.fromString(
+      couponOracle.getAssetPrice(position.debtToken).toString(),
+    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+    if (decodedOdosSwapEvent) {
+      loanPosition.isLeveraged = true
+    }
   }
   const prevDebtAmount = loanPosition.amount
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
@@ -128,69 +164,21 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .toHexString()
     loanPosition.updatedAt = event.block.timestamp
 
-    const transferEvents = (
-      event.receipt as ethereum.TransactionReceipt
-    ).logs.filter(
-      (log) =>
-        log.topics[0].toHexString() ==
-        '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
-    )
-    let inCollateralAmount = BigInt.fromI32(0)
-    let outCollateralAmount = BigInt.fromI32(0)
-    let outETHAmount = BigInt.fromI32(0)
-    const collateralUnderlyingAddress = AssetContract.bind(
-      position.collateralToken,
-    ).underlyingToken()
-    for (let i = 0; i < transferEvents.length; i++) {
-      const decoded = ethereum.decode('uint256', transferEvents[i].data)
-      const from = ethereum.decode('address', transferEvents[i].topics[1])
-      const to = ethereum.decode('address', transferEvents[i].topics[2])
-      if (decoded && from && to) {
-        if (
-          from.toAddress() == event.transaction.from &&
-          transferEvents[i].address == collateralUnderlyingAddress
-        ) {
-          inCollateralAmount = inCollateralAmount.plus(decoded.toBigInt())
-        } else if (
-          to.toAddress() == event.transaction.from &&
-          transferEvents[i].address == collateralUnderlyingAddress
-        ) {
-          outCollateralAmount = outCollateralAmount.plus(decoded.toBigInt())
-        } else if (
-          to.toAddress() == Address.fromString(ADDRESS_ZERO) &&
-          transferEvents[i].address ==
-            Address.fromString(ETH_UNDERLYING_ADDRESS)
-        ) {
-          outETHAmount = outETHAmount.plus(decoded.toBigInt())
-        }
+    if (
+      loanPosition.isLeveraged &&
+      decodedOdosSwapEvent &&
+      collateralAmountDelta.notEqual(BigInt.zero())
+    ) {
+      const data = decodedOdosSwapEvent.toTuple()
+      const inputAmount = data[1].toBigInt()
+      const amountOut = data[3].toBigInt()
+      if (collateralAmountDelta.gt(BigInt.zero())) {
+        loanPosition.borrowedCollateralAmount =
+          loanPosition.borrowedCollateralAmount.plus(amountOut)
+      } else {
+        loanPosition.borrowedCollateralAmount =
+          loanPosition.borrowedCollateralAmount.minus(inputAmount)
       }
-    }
-    if (collateralAmountDelta.gt(BigInt.zero())) {
-      let paidCollateralFromUser = inCollateralAmount
-      if (
-        collateralUnderlyingAddress ==
-        Address.fromString(ETH_UNDERLYING_ADDRESS)
-      ) {
-        paidCollateralFromUser = paidCollateralFromUser.plus(
-          event.transaction.value,
-        )
-      }
-      loanPosition.borrowedCollateralAmount =
-        loanPosition.borrowedCollateralAmount.plus(
-          collateralAmountDelta.minus(paidCollateralFromUser),
-        )
-    } else if (collateralAmountDelta.lt(BigInt.zero())) {
-      let repaidCollateralToUser = outCollateralAmount
-      if (
-        collateralUnderlyingAddress ==
-        Address.fromString(ETH_UNDERLYING_ADDRESS)
-      ) {
-        repaidCollateralToUser = repaidCollateralToUser.plus(outETHAmount)
-      }
-      loanPosition.borrowedCollateralAmount =
-        loanPosition.borrowedCollateralAmount.plus(
-          collateralAmountDelta.plus(repaidCollateralToUser),
-        )
     }
 
     loanPosition.save()
