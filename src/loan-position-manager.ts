@@ -150,9 +150,10 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
         }
       }
     }
-    loanPosition.borrowedCollateralAmount = collateralAmountDelta.minus(
-      event.transaction.value.plus(erc20Value),
-    )
+    loanPosition.borrowedCollateralAmount =
+      loanPosition.borrowedCollateralAmount.plus(
+        collateralAmountDelta.minus(event.transaction.value.plus(erc20Value)),
+      )
 
     loanPosition.save()
   }
