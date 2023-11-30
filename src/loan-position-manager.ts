@@ -85,6 +85,17 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
   const loanPositionManager = LoanPositionManagerContract.bind(event.address)
   const position = loanPositionManager.getPosition(positionId)
 
+  const odosSwapEvents = (
+    event.receipt as ethereum.TransactionReceipt
+  ).logs.filter(
+    (log) =>
+      log.topics[0].toHexString() ==
+      '0x823eaf01002d7353fbcadb2ea3305cc46fa35d799cb0914846d185ac06f8ad05',
+  )
+  const decodedOdosSwapEvent = ethereum.decode(
+    '(address,uint256,address,uint256,address,int256,uint32)',
+    odosSwapEvents[0].data,
+  )
   let loanPosition = LoanPosition.load(positionId.toString())
   if (loanPosition === null) {
     loanPosition = new LoanPosition(positionId.toString())
@@ -97,7 +108,11 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       getEpochIndexByTimestamp(event.block.timestamp),
     ).id
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
+    loanPosition.isLeveraged = false
     loanPosition.borrowedCollateralAmount = BigInt.zero()
+    if (decodedOdosSwapEvent) {
+      loanPosition.isLeveraged = true
+    }
   }
   const prevDebtAmount = loanPosition.amount
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
@@ -128,19 +143,12 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .toHexString()
     loanPosition.updatedAt = event.block.timestamp
 
-    const odosSwapEvents = (
-      event.receipt as ethereum.TransactionReceipt
-    ).logs.filter(
-      (log) =>
-        log.topics[0].toHexString() ==
-        '0x823eaf01002d7353fbcadb2ea3305cc46fa35d799cb0914846d185ac06f8ad05',
-    )
-    const decoded = ethereum.decode(
-      '(address,uint256,address,uint256,address,int256,uint32)',
-      odosSwapEvents[0].data,
-    )
-    if (decoded && collateralAmountDelta.notEqual(BigInt.zero())) {
-      const data = decoded.toTuple()
+    if (
+      loanPosition.isLeveraged &&
+      decodedOdosSwapEvent &&
+      collateralAmountDelta.notEqual(BigInt.zero())
+    ) {
+      const data = decodedOdosSwapEvent.toTuple()
       const inputAmount = data[1].toBigInt()
       const amountOut = data[3].toBigInt()
       if (collateralAmountDelta.gt(BigInt.zero())) {
