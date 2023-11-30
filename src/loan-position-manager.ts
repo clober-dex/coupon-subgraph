@@ -128,69 +128,28 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .toHexString()
     loanPosition.updatedAt = event.block.timestamp
 
-    const transferEvents = (
+    const odosSwapEvents = (
       event.receipt as ethereum.TransactionReceipt
     ).logs.filter(
       (log) =>
         log.topics[0].toHexString() ==
-        '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+        '0x823eaf01002d7353fbcadb2ea3305cc46fa35d799cb0914846d185ac06f8ad05',
     )
-    let inCollateralAmount = BigInt.fromI32(0)
-    let outCollateralAmount = BigInt.fromI32(0)
-    let outETHAmount = BigInt.fromI32(0)
-    const collateralUnderlyingAddress = AssetContract.bind(
-      position.collateralToken,
-    ).underlyingToken()
-    for (let i = 0; i < transferEvents.length; i++) {
-      const decoded = ethereum.decode('uint256', transferEvents[i].data)
-      const from = ethereum.decode('address', transferEvents[i].topics[1])
-      const to = ethereum.decode('address', transferEvents[i].topics[2])
-      if (decoded && from && to) {
-        if (
-          from.toAddress() == event.transaction.from &&
-          transferEvents[i].address == collateralUnderlyingAddress
-        ) {
-          inCollateralAmount = inCollateralAmount.plus(decoded.toBigInt())
-        } else if (
-          to.toAddress() == event.transaction.from &&
-          transferEvents[i].address == collateralUnderlyingAddress
-        ) {
-          outCollateralAmount = outCollateralAmount.plus(decoded.toBigInt())
-        } else if (
-          to.toAddress() == Address.fromString(ADDRESS_ZERO) &&
-          transferEvents[i].address ==
-            Address.fromString(ETH_UNDERLYING_ADDRESS)
-        ) {
-          outETHAmount = outETHAmount.plus(decoded.toBigInt())
-        }
+    const decoded = ethereum.decode(
+      '(address,uint256,address,uint256,address,int256,uint32)',
+      odosSwapEvents[0].data,
+    )
+    if (decoded && collateralAmountDelta.notEqual(BigInt.zero())) {
+      const data = decoded.toTuple()
+      const inputAmount = data[1].toBigInt()
+      const amountOut = data[3].toBigInt()
+      if (collateralAmountDelta.gt(BigInt.zero())) {
+        loanPosition.borrowedCollateralAmount =
+          loanPosition.borrowedCollateralAmount.plus(amountOut)
+      } else {
+        loanPosition.borrowedCollateralAmount =
+          loanPosition.borrowedCollateralAmount.minus(inputAmount)
       }
-    }
-    if (collateralAmountDelta.gt(BigInt.zero())) {
-      let paidCollateralFromUser = inCollateralAmount
-      if (
-        collateralUnderlyingAddress ==
-        Address.fromString(ETH_UNDERLYING_ADDRESS)
-      ) {
-        paidCollateralFromUser = paidCollateralFromUser.plus(
-          event.transaction.value,
-        )
-      }
-      loanPosition.borrowedCollateralAmount =
-        loanPosition.borrowedCollateralAmount.plus(
-          collateralAmountDelta.minus(paidCollateralFromUser),
-        )
-    } else if (collateralAmountDelta.lt(BigInt.zero())) {
-      let repaidCollateralToUser = outCollateralAmount
-      if (
-        collateralUnderlyingAddress ==
-        Address.fromString(ETH_UNDERLYING_ADDRESS)
-      ) {
-        repaidCollateralToUser = repaidCollateralToUser.plus(outETHAmount)
-      }
-      loanPosition.borrowedCollateralAmount =
-        loanPosition.borrowedCollateralAmount.plus(
-          collateralAmountDelta.plus(repaidCollateralToUser),
-        )
     }
 
     loanPosition.save()
