@@ -41,10 +41,10 @@ jobs:
             ${{ matrix.os }}-yarn-
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install && yarn global add @graphprotocol/graph-cli^0.53.0
 
       - name: Run GraphQL codegen
-        run: yarn codegen && yarn global add @graphprotocol/graph-cli^0.53.0
+        run: yarn codegen
 
       - name: Build project
         run: yarn build
