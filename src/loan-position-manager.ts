@@ -1,11 +1,4 @@
-import {
-  Address,
-  BigInt,
-  Bytes,
-  ethereum,
-  store,
-  log,
-} from '@graphprotocol/graph-ts'
+import { Address, BigInt, ethereum, store } from '@graphprotocol/graph-ts'
 
 import {
   LiquidatePosition,
@@ -113,14 +106,19 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
         '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
     )
     let erc20Value = BigInt.fromI32(0)
+    const collateralUnderlyingAddress = AssetContract.bind(
+      position.collateralToken,
+    ).underlyingToken()
     for (let i = 0; i < transferEvents.length; i++) {
-      const decoded = ethereum.decode(
-        '(uint256)',
-        transferEvents[i].data,
-      ) as ethereum.Value
-      const from = transferEvents[i].topics[0].toHexString()
-      if (from == event.transaction.from.toHexString()) {
-        erc20Value = erc20Value.plus(decoded.toBigInt())
+      const decoded = ethereum.decode('uint256', transferEvents[i].data)
+      const from = ethereum.decode('address', transferEvents[i].topics[1])
+      if (decoded && from) {
+        if (
+          from.toAddress() == event.transaction.from &&
+          transferEvents[i].address == collateralUnderlyingAddress
+        ) {
+          erc20Value = erc20Value.plus(decoded.toBigInt())
+        }
       }
     }
     loanPosition.borrowedCollateralAmount = position.collateralAmount.minus(
