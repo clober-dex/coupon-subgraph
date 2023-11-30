@@ -91,10 +91,13 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       log.topics[0].toHexString() ==
       '0x823eaf01002d7353fbcadb2ea3305cc46fa35d799cb0914846d185ac06f8ad05',
   )
-  const decodedOdosSwapEvent = ethereum.decode(
-    '(address,uint256,address,uint256,address,int256,uint32)',
-    odosSwapEvents[0].data,
-  )
+  const decodedOdosSwapEvent =
+    odosSwapEvents.length > 0
+      ? ethereum.decode(
+          '(address,uint256,address,uint256,address,int256,uint32)',
+          odosSwapEvents[0].data,
+        )
+      : null
   let loanPosition = LoanPosition.load(positionId.toString())
   if (loanPosition === null) {
     loanPosition = new LoanPosition(positionId.toString())
