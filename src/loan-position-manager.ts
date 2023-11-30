@@ -97,33 +97,6 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     ).id
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
     loanPosition.borrowedCollateralAmount = BigInt.zero()
-
-    const transferEvents = (
-      event.receipt as ethereum.TransactionReceipt
-    ).logs.filter(
-      (log) =>
-        log.topics[0].toHexString() ==
-        '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
-    )
-    let erc20Value = BigInt.fromI32(0)
-    const collateralUnderlyingAddress = AssetContract.bind(
-      position.collateralToken,
-    ).underlyingToken()
-    for (let i = 0; i < transferEvents.length; i++) {
-      const decoded = ethereum.decode('uint256', transferEvents[i].data)
-      const from = ethereum.decode('address', transferEvents[i].topics[1])
-      if (decoded && from) {
-        if (
-          from.toAddress() == event.transaction.from &&
-          transferEvents[i].address == collateralUnderlyingAddress
-        ) {
-          erc20Value = erc20Value.plus(decoded.toBigInt())
-        }
-      }
-    }
-    loanPosition.borrowedCollateralAmount = position.collateralAmount.minus(
-      event.transaction.value.plus(erc20Value),
-    )
   }
   const prevDebtAmount = loanPosition.amount
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)
@@ -153,6 +126,34 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .underlyingToken()
       .toHexString()
     loanPosition.updatedAt = event.block.timestamp
+
+    const transferEvents = (
+      event.receipt as ethereum.TransactionReceipt
+    ).logs.filter(
+      (log) =>
+        log.topics[0].toHexString() ==
+        '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+    )
+    let erc20Value = BigInt.fromI32(0)
+    const collateralUnderlyingAddress = AssetContract.bind(
+      position.collateralToken,
+    ).underlyingToken()
+    for (let i = 0; i < transferEvents.length; i++) {
+      const decoded = ethereum.decode('uint256', transferEvents[i].data)
+      const from = ethereum.decode('address', transferEvents[i].topics[1])
+      if (decoded && from) {
+        if (
+          from.toAddress() == event.transaction.from &&
+          transferEvents[i].address == collateralUnderlyingAddress
+        ) {
+          erc20Value = erc20Value.plus(decoded.toBigInt())
+        }
+      }
+    }
+    loanPosition.borrowedCollateralAmount = collateralAmountDelta.minus(
+      event.transaction.value.plus(erc20Value),
+    )
+
     loanPosition.save()
   }
 
