@@ -137,6 +137,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     )
     let inCollateralAmount = BigInt.fromI32(0)
     let outCollateralAmount = BigInt.fromI32(0)
+    let outETHAmount = BigInt.fromI32(0)
     const collateralUnderlyingAddress = AssetContract.bind(
       position.collateralToken,
     ).underlyingToken()
@@ -155,6 +156,11 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
           transferEvents[i].address == collateralUnderlyingAddress
         ) {
           outCollateralAmount = outCollateralAmount.plus(decoded.toBigInt())
+        } else if (
+          to.toAddress().toHexString() == ADDRESS_ZERO &&
+          transferEvents[i].address.toHexString() == ETH_UNDERLYING_ADDRESS
+        ) {
+          outETHAmount = outETHAmount.plus(decoded.toBigInt())
         }
       }
     }
@@ -178,9 +184,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
         collateralUnderlyingAddress.toHexString().toLowerCase() ==
         ETH_UNDERLYING_ADDRESS.toLowerCase()
       ) {
-        repaidCollateralToUser = repaidCollateralToUser.plus(
-          event.transaction.value, // TODO: replace with something else
-        )
+        repaidCollateralToUser = repaidCollateralToUser.plus(outETHAmount)
       }
       loanPosition.borrowedCollateralAmount =
         loanPosition.borrowedCollateralAmount.plus(
