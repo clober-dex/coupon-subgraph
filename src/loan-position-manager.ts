@@ -1,4 +1,10 @@
-import { Address, BigInt, ethereum, store } from '@graphprotocol/graph-ts'
+import {
+  Address,
+  BigDecimal,
+  BigInt,
+  ethereum,
+  store,
+} from '@graphprotocol/graph-ts'
 
 import {
   LiquidatePosition,
@@ -10,14 +16,17 @@ import {
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
 import { AssetStatus, Collateral, LoanPosition } from '../generated/schema'
+import { CouponOracle as CouponOracleContract } from '../generated/LoanPositionManager/CouponOracle'
 
 import {
   ADDRESS_ZERO,
   createAsset,
   createEpoch,
   createToken,
+  exponentToBigDecimal,
   getEpochIndexByTimestamp,
 } from './helpers'
+import { getCouponOracleAddress } from './addresses'
 
 export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
   createToken(event.params.collateral)
@@ -112,6 +121,16 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
     loanPosition.isLeveraged = false
     loanPosition.borrowedCollateralAmount = BigInt.zero()
+    const couponOracle = CouponOracleContract.bind(
+      Address.fromString(getCouponOracleAddress()),
+    )
+    const priceDecimals = couponOracle.decimals()
+    loanPosition.entryCollateralCurrencyPrice = BigDecimal.fromString(
+      couponOracle.getAssetPrice(position.collateralToken).toString(),
+    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+    loanPosition.entryDebtCurrencyPrice = BigDecimal.fromString(
+      couponOracle.getAssetPrice(position.debtToken).toString(),
+    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
     if (decodedOdosSwapEvent) {
       loanPosition.isLeveraged = true
     }
