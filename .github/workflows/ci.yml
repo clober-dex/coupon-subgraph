@@ -50,4 +50,4 @@ jobs:
         run: yarn build
 
       - name: Deploy
-        run: graph deploy coupon-subgraph --version-label '$ENVIRONMENT' --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key '${{ secrets.ALCHEMY_API_KEY }}' --ipfs https://ipfs.satsuma.xyz
+        run: graph deploy coupon-subgraph --version-label $ENVIRONMENT --node https://subgraphs.alchemy.com/api/subgraphs/deploy --deploy-key ${{ secrets.ALCHEMY_API_KEY }} --ipfs https://ipfs.satsuma.xyz
