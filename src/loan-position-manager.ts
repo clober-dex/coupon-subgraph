@@ -241,6 +241,10 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
 
   if (shouldRemove) {
     store.remove('LoanPosition', positionId.toString())
+
+    positionStatus.totalLoanPositionCount =
+      positionStatus.totalLoanPositionCount.minus(BigInt.fromI32(1))
+    positionStatus.save()
   }
 }
 
