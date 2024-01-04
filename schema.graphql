@@ -27,6 +27,13 @@ type AssetStatus @entity {
   totalBorrowed: BigInt!
 }
 
+
+type PositionStatus @entity {
+  id: ID! # chainId
+  totalBondPositionCount: BigInt!
+  totalLoanPositionCount: BigInt!
+}
+
 type Collateral @entity {
   id: ID! # ${substitute}-${debt}
   liquidationThreshold: BigInt!

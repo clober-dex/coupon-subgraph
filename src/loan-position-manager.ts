@@ -22,6 +22,7 @@ import {
   ADDRESS_ZERO,
   createAsset,
   createEpoch,
+  createPositionStatus,
   createToken,
   exponentToBigDecimal,
   getEpochIndexByTimestamp,
@@ -107,6 +108,8 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
           odosSwapEvents[0].data,
         )
       : null
+
+  const positionStatus = createPositionStatus()
   let loanPosition = LoanPosition.load(positionId.toString())
   if (loanPosition === null) {
     loanPosition = new LoanPosition(positionId.toString())
@@ -134,6 +137,10 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     if (decodedOdosSwapEvent) {
       loanPosition.isLeveraged = true
     }
+
+    positionStatus.totalLoanPositionCount =
+      positionStatus.totalLoanPositionCount.plus(BigInt.fromI32(1))
+    positionStatus.save()
   }
   const prevDebtAmount = loanPosition.amount
   const debtAmountDelta = event.params.debtAmount.minus(loanPosition.amount)

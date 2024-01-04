@@ -6,6 +6,11 @@ const MULTICALL3_ADDRESS = '0xcA11bde05977b3631167028862bE2a173976CA11'
 const DEV_CHAIN_ID = BigInt.fromI32(7777)
 const TEST_CHAIN_ID = BigInt.fromI32(421613)
 
+export function getChainId(): BigInt {
+  const multiCall = Multicall3.bind(Address.fromString(MULTICALL3_ADDRESS))
+  return multiCall.getChainId()
+}
+
 export function getCouponMarketDeployerAddress(): string {
   const multiCall = Multicall3.bind(Address.fromString(MULTICALL3_ADDRESS))
   const chainId = multiCall.getChainId()

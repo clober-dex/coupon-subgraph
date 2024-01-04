@@ -8,15 +8,17 @@ import {
 } from '../generated/BondPositionManager/BondPositionManager'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
-import { AssetStatus, BondPosition } from '../generated/schema'
+import { AssetStatus, BondPosition, PositionStatus } from '../generated/schema'
 
 import {
   ADDRESS_ZERO,
   createAsset,
   createEpoch,
+  createPositionStatus,
   createToken,
   getEpochIndexByTimestamp,
 } from './helpers'
+import { getChainId } from './addresses'
 
 export function handleRegisterAsset(event: RegisterAsset): void {
   const substitute = createToken(event.params.asset)
@@ -60,6 +62,7 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
   const bondPositionManager = BondPositionManagerContract.bind(event.address)
   const position = bondPositionManager.getPosition(tokenId)
 
+  const positionStatus = createPositionStatus()
   let bondPosition = BondPosition.load(tokenId.toString())
   if (bondPosition === null) {
     bondPosition = new BondPosition(tokenId.toString())
@@ -69,6 +72,10 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
     bondPosition.fromEpoch = createEpoch(
       getEpochIndexByTimestamp(event.block.timestamp),
     ).id
+
+    positionStatus.totalBondPositionCount =
+      positionStatus.totalBondPositionCount.plus(BigInt.fromI32(1))
+    positionStatus.save()
   }
   const amountDelta = event.params.amount.minus(bondPosition.amount)
   const shouldRemove = event.params.amount.equals(BigInt.zero())
