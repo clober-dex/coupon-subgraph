@@ -29,6 +29,8 @@ dataSources:
           file: ./abis/ERC20SymbolBytes.json
         - name: ERC20NameBytes
           file: ./abis/ERC20NameBytes.json
+        - name: Multicall3
+          file: ./abis/Multicall3.json
       eventHandlers:
         - event: RegisterAsset(indexed address)
           handler: handleRegisterAsset
