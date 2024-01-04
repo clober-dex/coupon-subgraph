@@ -1,11 +1,19 @@
 import { BigInt, Address, BigDecimal } from '@graphprotocol/graph-ts'
 
-import { Asset, AssetStatus, Epoch, Token } from '../generated/schema'
+import {
+  Asset,
+  AssetStatus,
+  Epoch,
+  PositionStatus,
+  Token,
+} from '../generated/schema'
 import { Wrapped1155Metadata } from '../generated/MarketFactory/Wrapped1155Metadata'
 import { ERC20 } from '../generated/MarketFactory/ERC20'
 import { ERC20SymbolBytes } from '../generated/MarketFactory/ERC20SymbolBytes'
 import { ERC20NameBytes } from '../generated/MarketFactory/ERC20NameBytes'
 import { Substitute as AssetContract } from '../generated/BondPositionManager/Substitute'
+
+import { getChainId } from './addresses'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
@@ -125,6 +133,18 @@ export function createAssetStatus(
     assetStatus.save()
   }
   return assetStatus
+}
+
+export function createPositionStatus(): PositionStatus {
+  const chainId = getChainId()
+  let positionStatus = PositionStatus.load(chainId.toString())
+  if (positionStatus === null) {
+    positionStatus = new PositionStatus(chainId.toString())
+    positionStatus.totalBondPositionCount = BigInt.zero()
+    positionStatus.totalLoanPositionCount = BigInt.zero()
+    positionStatus.save()
+  }
+  return positionStatus
 }
 
 export function createEpoch(epochIndex: BigInt): Epoch {
