@@ -110,6 +110,10 @@ export function handleUpdateBondPosition(event: UpdatePosition): void {
 
   if (shouldRemove) {
     store.remove('BondPosition', tokenId.toString())
+
+    positionStatus.totalBondPositionCount =
+      positionStatus.totalBondPositionCount.minus(BigInt.fromI32(1))
+    positionStatus.save()
   }
 }
 
