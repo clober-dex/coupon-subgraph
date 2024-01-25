@@ -15,7 +15,12 @@ import {
 } from '../generated/LoanPositionManager/LoanPositionManager'
 import { OrderBook as OrderBookContract } from '../generated/templates/OrderNFT/OrderBook'
 import { Substitute as AssetContract } from '../generated/LoanPositionManager/Substitute'
-import { AssetStatus, Collateral, LoanPosition } from '../generated/schema'
+import {
+  AssetStatus,
+  Collateral,
+  LiquidationHistory,
+  LoanPosition,
+} from '../generated/schema'
 import { CouponOracle as CouponOracleContract } from '../generated/LoanPositionManager/CouponOracle'
 
 import {
@@ -120,7 +125,6 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.amount = BigInt.zero()
     loanPosition.principal = BigInt.zero()
     loanPosition.collateralAmount = BigInt.zero()
-    loanPosition.liquidationRepaidAmount = BigInt.zero()
     loanPosition.createdAt = event.block.timestamp
     loanPosition.fromEpoch = createEpoch(
       getEpochIndexByTimestamp(event.block.timestamp),
@@ -317,7 +321,35 @@ export function handleLiquidatePosition(event: LiquidatePosition): void {
   if (loanPosition === null) {
     return
   }
-  loanPosition.liquidationRepaidAmount =
-    loanPosition.liquidationRepaidAmount.plus(event.params.repayAmount)
-  loanPosition.save()
+  const collateral = Collateral.load(loanPosition.collateral)
+  if (collateral === null) {
+    return
+  }
+
+  const liquidationHistory = new LiquidationHistory(
+    event.transaction.hash.toHexString(),
+  )
+  liquidationHistory.loanPosition = loanPosition.id
+  liquidationHistory.borrower = loanPosition.user
+  liquidationHistory.liquidator = event.params.liquidator.toHexString()
+  liquidationHistory.liquidatedCollateralAmount = event.params.liquidationAmount
+  liquidationHistory.repayDebtAmount = event.params.repayAmount
+  liquidationHistory.protocolFeeAmount = event.params.protocolFeeAmount
+
+  const couponOracle = CouponOracleContract.bind(
+    Address.fromString(getCouponOracleAddress()),
+  )
+  const priceDecimals = couponOracle.decimals()
+  liquidationHistory.collateralCurrencyPrice = BigDecimal.fromString(
+    couponOracle
+      .getAssetPrice(Address.fromString(collateral.underlying))
+      .toString(),
+  ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+  liquidationHistory.debtCurrencyPrice = BigDecimal.fromString(
+    couponOracle
+      .getAssetPrice(Address.fromString(loanPosition.underlying))
+      .toString(),
+  ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+  liquidationHistory.timestamp = event.block.timestamp
+  liquidationHistory.save()
 }
