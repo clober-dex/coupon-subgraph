@@ -322,6 +322,7 @@ export function handleLiquidatePosition(event: LiquidatePosition): void {
     return
   }
   const collateral = Collateral.load(loanPosition.collateral)
+  const underlying = createToken(Address.fromString(loanPosition.underlying))
   if (collateral === null) {
     return
   }
@@ -329,11 +330,13 @@ export function handleLiquidatePosition(event: LiquidatePosition): void {
   const liquidationHistory = new LiquidationHistory(
     event.transaction.hash.toHexString(),
   )
-  liquidationHistory.loanPosition = loanPosition.id
+  liquidationHistory.positionId = event.params.positionId
+  liquidationHistory.underlying = underlying.id
+  liquidationHistory.collateral = collateral.id
   liquidationHistory.borrower = loanPosition.user
   liquidationHistory.liquidator = event.params.liquidator.toHexString()
   liquidationHistory.liquidatedCollateralAmount = event.params.liquidationAmount
-  liquidationHistory.repayDebtAmount = event.params.repayAmount
+  liquidationHistory.repaidDebtAmount = event.params.repayAmount
   liquidationHistory.protocolFeeAmount = event.params.protocolFeeAmount
 
   const couponOracle = CouponOracleContract.bind(
