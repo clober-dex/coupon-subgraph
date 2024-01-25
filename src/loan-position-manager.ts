@@ -279,7 +279,7 @@ export function handleLiquidatePosition(event: LiquidatePosition): void {
   const liquidationHistory = new LiquidationHistory(
     event.transaction.hash.toHexString(),
   )
-  liquidationHistory.positionId = event.params.positionId
+  liquidationHistory.loanPosition = loanPosition.id
   liquidationHistory.borrower = loanPosition.user
   liquidationHistory.liquidator = event.params.liquidator.toHexString()
   liquidationHistory.liquidatedCollateralAmount = event.params.liquidationAmount

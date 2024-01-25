@@ -78,7 +78,7 @@ type LoanPosition @entity {
 
 type LiquidationHistory @entity {
   id: ID! # liquidation transaction hash
-  positionId: BigInt!
+  loanPosition: LoanPosition!
   borrower: String!
   liquidator: String!
   liquidatedCollateralAmount: BigInt!
