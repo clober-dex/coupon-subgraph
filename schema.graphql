@@ -73,7 +73,9 @@ type LoanPosition @entity {
   updatedAt: BigInt!
   isLeveraged: Boolean!
   entryCollateralCurrencyPrice: BigDecimal!
+  averageCollateralCurrencyPrice: BigDecimal!
   entryDebtCurrencyPrice: BigDecimal!
+  averageDebtCurrencyPrice: BigDecimal!
   borrowedCollateralAmount: BigInt!
 }
 

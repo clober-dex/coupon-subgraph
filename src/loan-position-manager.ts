@@ -111,6 +111,10 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
 
   const positionStatus = createPositionStatus()
   let loanPosition = LoanPosition.load(positionId.toString())
+  const couponOracle = CouponOracleContract.bind(
+    Address.fromString(getCouponOracleAddress()),
+  )
+  const priceDecimals = couponOracle.decimals()
   if (loanPosition === null) {
     loanPosition = new LoanPosition(positionId.toString())
     loanPosition.amount = BigInt.zero()
@@ -124,14 +128,16 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
     loanPosition.isLeveraged = false
     loanPosition.borrowedCollateralAmount = BigInt.zero()
-    const couponOracle = CouponOracleContract.bind(
-      Address.fromString(getCouponOracleAddress()),
-    )
-    const priceDecimals = couponOracle.decimals()
     loanPosition.entryCollateralCurrencyPrice = BigDecimal.fromString(
       couponOracle.getAssetPrice(position.collateralToken).toString(),
     ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+    loanPosition.averageCollateralCurrencyPrice = BigDecimal.fromString(
+      couponOracle.getAssetPrice(position.collateralToken).toString(),
+    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
     loanPosition.entryDebtCurrencyPrice = BigDecimal.fromString(
+      couponOracle.getAssetPrice(position.debtToken).toString(),
+    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+    loanPosition.averageDebtCurrencyPrice = BigDecimal.fromString(
       couponOracle.getAssetPrice(position.debtToken).toString(),
     ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
     if (decodedOdosSwapEvent) {
@@ -153,6 +159,50 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     event.params.collateralAmount.equals(BigInt.zero()) &&
     event.params.debtAmount.equals(BigInt.zero())
   if (!shouldRemove) {
+    if (collateralAmountDelta.gt(BigInt.zero())) {
+      // adjust average collateral currency price
+      const collateralCurrencyPrice = BigDecimal.fromString(
+        couponOracle.getAssetPrice(position.collateralToken).toString(),
+      ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+      loanPosition.averageCollateralCurrencyPrice =
+        loanPosition.averageCollateralCurrencyPrice
+          .times(
+            BigDecimal.fromString(loanPosition.collateralAmount.toString()),
+          )
+          .plus(
+            collateralCurrencyPrice.times(
+              BigDecimal.fromString(collateralAmountDelta.toString()),
+            ),
+          )
+          .div(
+            BigDecimal.fromString(
+              loanPosition.collateralAmount
+                .plus(collateralAmountDelta)
+                .toString(),
+            ),
+          )
+    }
+
+    if (debtAmountDelta.gt(BigInt.zero())) {
+      // adjust average debt currency price
+      const debtCurrencyPrice = BigDecimal.fromString(
+        couponOracle.getAssetPrice(position.debtToken).toString(),
+      ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+      loanPosition.averageDebtCurrencyPrice =
+        loanPosition.averageDebtCurrencyPrice
+          .times(BigDecimal.fromString(loanPosition.amount.toString()))
+          .plus(
+            debtCurrencyPrice.times(
+              BigDecimal.fromString(debtAmountDelta.toString()),
+            ),
+          )
+          .div(
+            BigDecimal.fromString(
+              loanPosition.amount.plus(debtAmountDelta).toString(),
+            ),
+          )
+    }
+
     loanPosition.user = loanPositionManager.ownerOf(positionId).toHexString()
     loanPosition.collateral = position.collateralToken
       .toHexString()
