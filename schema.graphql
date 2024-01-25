@@ -63,7 +63,6 @@ type LoanPosition @entity {
   collateral: Collateral!
   collateralAmount: BigInt!
   amount: BigInt!
-  liquidationRepaidAmount: BigInt!
   principal: BigInt!
   substitute: Token!
   underlying: Token!
@@ -75,6 +74,19 @@ type LoanPosition @entity {
   entryCollateralCurrencyPrice: BigDecimal!
   entryDebtCurrencyPrice: BigDecimal!
   borrowedCollateralAmount: BigInt!
+}
+
+type LiquidationHistory @entity {
+  id: ID! # liquidation transaction hash
+  positionId: BigInt!
+  borrower: String!
+  liquidator: String!
+  liquidatedCollateralAmount: BigInt!
+  repayDebtAmount: BigInt!
+  protocolFeeAmount: BigInt!
+  collateralCurrencyPrice: BigDecimal!
+  debtCurrencyPrice: BigDecimal!
+  timestamp: BigInt!
 }
 
 
