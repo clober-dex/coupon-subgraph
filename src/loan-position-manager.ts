@@ -21,6 +21,7 @@ import {
   LeverageHistory,
   LiquidationHistory,
   LoanPosition,
+  Market,
   Token,
 } from '../generated/schema'
 import { CouponOracle as CouponOracleContract } from '../generated/LoanPositionManager/CouponOracle'
@@ -74,6 +75,10 @@ export function handleSetLoanConfiguration(event: SetLoanConfiguration): void {
 }
 
 export function handleUpdateLoanPosition(event: UpdatePosition): void {
+  const positionId = event.params.positionId
+  const loanPositionManager = LoanPositionManagerContract.bind(event.address)
+  const position = loanPositionManager.getPosition(positionId)
+
   const takeEvents = (event.receipt as ethereum.TransactionReceipt).logs.filter(
     (log) =>
       log.topics[0].toHexString() ==
@@ -90,6 +95,14 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     const data = decoded.toTuple()
     const rawAmount = data[1].toBigInt()
     const options = data[2].toI32()
+    const takeEventMarket = Market.load(takeEvents[i].address.toHexString())
+    if (
+      takeEventMarket === null ||
+      takeEventMarket.couponId.isZero() ||
+      takeEventMarket.quoteToken != position.debtToken.toHexString()
+    ) {
+      continue
+    }
     if (options & 0x1) {
       // bid (withdraw)
       boughtAmount = boughtAmount.plus(orderBookContract.rawToQuote(rawAmount))
@@ -98,10 +111,6 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       soldAmount = soldAmount.plus(orderBookContract.rawToQuote(rawAmount))
     }
   }
-
-  const positionId = event.params.positionId
-  const loanPositionManager = LoanPositionManagerContract.bind(event.address)
-  const position = loanPositionManager.getPosition(positionId)
 
   const odosSwapEvents = (
     event.receipt as ethereum.TransactionReceipt
