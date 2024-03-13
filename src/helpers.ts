@@ -199,3 +199,41 @@ export function getEpochIndexByTimestamp(timestamp: BigInt): BigInt {
   const month = date.getUTCMonth()
   return BigInt.fromI32((year - 1970) * 12 + month)
 }
+
+export function calculatePnl(
+  collateralAmount: BigDecimal,
+  borrowedCollateralAmount: BigDecimal,
+  debtAmount: BigDecimal,
+  collateralPrice: BigDecimal,
+  averageCollateralPrice: BigDecimal,
+  debtPrice: BigDecimal,
+): BigDecimal {
+  // PnL = (collateralAmount * collateralPrice - debtAmount * debtPrice) / ((collateralAmount - borrowedCollateralAmount) * averageCollateralPrice)
+  return collateralAmount
+    .times(collateralPrice)
+    .minus(debtAmount.times(debtPrice))
+    .div(
+      collateralAmount
+        .minus(borrowedCollateralAmount)
+        .times(averageCollateralPrice),
+    )
+}
+
+export function calculateProfit(
+  collateralAmount: BigDecimal,
+  borrowedCollateralAmount: BigDecimal,
+  debtAmount: BigDecimal,
+  collateralPrice: BigDecimal,
+  averageCollateralPrice: BigDecimal,
+  debtPrice: BigDecimal,
+): BigDecimal {
+  // Profit = (collateralAmount * collateralPrice - debtAmount * debtPrice) - ((collateralAmount - borrowedCollateralAmount) * averageCollateralPrice)
+  return collateralAmount
+    .times(collateralPrice)
+    .minus(debtAmount.times(debtPrice))
+    .minus(
+      collateralAmount
+        .minus(borrowedCollateralAmount)
+        .times(averageCollateralPrice),
+    )
+}

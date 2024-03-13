@@ -18,13 +18,17 @@ import { Substitute as AssetContract } from '../generated/LoanPositionManager/Su
 import {
   AssetStatus,
   Collateral,
+  LeverageHistory,
   LiquidationHistory,
   LoanPosition,
+  Token,
 } from '../generated/schema'
 import { CouponOracle as CouponOracleContract } from '../generated/LoanPositionManager/CouponOracle'
 
 import {
   ADDRESS_ZERO,
+  calculatePnl,
+  calculateProfit,
   createAsset,
   createEpoch,
   createPositionStatus,
@@ -294,6 +298,76 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
   }
 
   if (shouldRemove) {
+    if (loanPosition.isLeveraged) {
+      const leverageHistory = new LeverageHistory(loanPosition.id)
+      leverageHistory.user = loanPosition.user
+      leverageHistory.collateral = loanPosition.collateral
+      leverageHistory.collateralAmount = loanPosition.collateralAmount
+      leverageHistory.amount = loanPosition.amount
+      leverageHistory.principal = loanPosition.principal
+      leverageHistory.substitute = loanPosition.substitute
+      leverageHistory.underlying = loanPosition.underlying
+      leverageHistory.fromEpoch = loanPosition.fromEpoch
+      leverageHistory.toEpoch = loanPosition.toEpoch
+      leverageHistory.createdAt = loanPosition.createdAt
+      leverageHistory.closedAt = event.block.timestamp
+      leverageHistory.entryCollateralCurrencyPrice =
+        loanPosition.entryCollateralCurrencyPrice
+      leverageHistory.averageCollateralCurrencyPrice =
+        loanPosition.averageCollateralCurrencyPrice
+      leverageHistory.closedCollateralCurrencyPrice = BigDecimal.fromString(
+        couponOracle.getAssetPrice(position.collateralToken).toString(),
+      ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+      leverageHistory.entryDebtCurrencyPrice =
+        loanPosition.entryDebtCurrencyPrice
+      leverageHistory.averageDebtCurrencyPrice =
+        loanPosition.averageDebtCurrencyPrice
+      leverageHistory.closedDebtCurrencyPrice = BigDecimal.fromString(
+        couponOracle.getAssetPrice(position.debtToken).toString(),
+      ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+      leverageHistory.borrowedCollateralAmount =
+        loanPosition.borrowedCollateralAmount
+
+      const collateral = Collateral.load(
+        leverageHistory.collateral,
+      ) as Collateral
+      const collateralUnderlying = Token.load(collateral.underlying) as Token
+      const debtUnderlying = Token.load(leverageHistory.underlying) as Token
+      const collateralDecimals = collateralUnderlying.decimals.toI32()
+      const debtDecimals = debtUnderlying.decimals.toI32()
+
+      leverageHistory.pnl = calculatePnl(
+        BigDecimal.fromString(leverageHistory.collateralAmount.toString()).div(
+          exponentToBigDecimal(BigInt.fromI32(collateralDecimals)),
+        ),
+        BigDecimal.fromString(
+          leverageHistory.borrowedCollateralAmount.toString(),
+        ).div(exponentToBigDecimal(BigInt.fromI32(collateralDecimals))),
+        BigDecimal.fromString(leverageHistory.amount.toString()).div(
+          exponentToBigDecimal(BigInt.fromI32(debtDecimals)),
+        ),
+        leverageHistory.closedCollateralCurrencyPrice,
+        leverageHistory.averageCollateralCurrencyPrice,
+        leverageHistory.closedDebtCurrencyPrice,
+      )
+
+      leverageHistory.profit = calculateProfit(
+        BigDecimal.fromString(leverageHistory.collateralAmount.toString()).div(
+          exponentToBigDecimal(BigInt.fromI32(collateralDecimals)),
+        ),
+        BigDecimal.fromString(
+          leverageHistory.borrowedCollateralAmount.toString(),
+        ).div(exponentToBigDecimal(BigInt.fromI32(collateralDecimals))),
+        BigDecimal.fromString(leverageHistory.amount.toString()).div(
+          exponentToBigDecimal(BigInt.fromI32(debtDecimals)),
+        ),
+        leverageHistory.closedCollateralCurrencyPrice,
+        leverageHistory.averageCollateralCurrencyPrice,
+        leverageHistory.closedDebtCurrencyPrice,
+      )
+
+      leverageHistory.save()
+    }
     store.remove('LoanPosition', positionId.toString())
 
     positionStatus.totalLoanPositionCount =

@@ -78,6 +78,30 @@ type LoanPosition @entity {
   borrowedCollateralAmount: BigInt!
 }
 
+type LeverageHistory @entity {
+  id: ID! # position id
+  user: String!
+  collateral: Collateral!
+  collateralAmount: BigInt!
+  amount: BigInt!
+  principal: BigInt!
+  substitute: Token!
+  underlying: Token!
+  fromEpoch: Epoch!
+  toEpoch: Epoch!
+  createdAt: BigInt!
+  closedAt: BigInt!
+  entryCollateralCurrencyPrice: BigDecimal!
+  averageCollateralCurrencyPrice: BigDecimal!
+  closedCollateralCurrencyPrice: BigDecimal!
+  entryDebtCurrencyPrice: BigDecimal!
+  averageDebtCurrencyPrice: BigDecimal!
+  closedDebtCurrencyPrice: BigDecimal!
+  borrowedCollateralAmount: BigInt!
+  pnl: BigDecimal!
+  profit: BigDecimal!
+}
+
 type LiquidationHistory @entity {
   id: ID! # liquidation transaction hash
   positionId: BigInt!
