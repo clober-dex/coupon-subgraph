@@ -22,8 +22,8 @@ import { getCouponMarketDeployerAddress } from './addresses'
 export function handleCreateStableMarket(event: CreateStableMarket): void {
   const epochIndex = getEpochIndex(event.params.baseToken)
   if (
-    epochIndex === BigInt.zero() ||
-    event.transaction.from.toHexString().toLowerCase() !==
+    epochIndex.isZero() ||
+    event.transaction.from.toHexString().toLowerCase() !=
       getCouponMarketDeployerAddress().toLowerCase()
   ) {
     return
@@ -60,7 +60,7 @@ export function handleCreateStableMarket(event: CreateStableMarket): void {
 export function handleCreateVolatileMarket(event: CreateVolatileMarket): void {
   const epochIndex = getEpochIndex(event.params.baseToken)
   if (
-    epochIndex === BigInt.zero() ||
+    epochIndex.isZero() ||
     event.transaction.from.toHexString().toLowerCase() !=
       getCouponMarketDeployerAddress().toLowerCase()
   ) {
