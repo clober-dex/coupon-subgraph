@@ -133,6 +133,12 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     Address.fromString(getCouponOracleAddress()),
   )
   const priceDecimals = couponOracle.decimals()
+  const collateralCurrencyPrice = BigDecimal.fromString(
+    couponOracle.getAssetPrice(position.collateralToken).toString(),
+  ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+  const debtCurrencyPrice = BigDecimal.fromString(
+    couponOracle.getAssetPrice(position.debtToken).toString(),
+  ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
   if (loanPosition === null) {
     loanPosition = new LoanPosition(positionId.toString())
     loanPosition.amount = BigInt.zero()
@@ -145,18 +151,12 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     loanPosition.toEpoch = createEpoch(BigInt.fromI32(position.expiredWith)).id
     loanPosition.isLeveraged = false
     loanPosition.borrowedCollateralAmount = BigInt.zero()
-    loanPosition.entryCollateralCurrencyPrice = BigDecimal.fromString(
-      couponOracle.getAssetPrice(position.collateralToken).toString(),
-    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
-    loanPosition.averageCollateralCurrencyPrice = BigDecimal.fromString(
-      couponOracle.getAssetPrice(position.collateralToken).toString(),
-    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
-    loanPosition.entryDebtCurrencyPrice = BigDecimal.fromString(
-      couponOracle.getAssetPrice(position.debtToken).toString(),
-    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
-    loanPosition.averageDebtCurrencyPrice = BigDecimal.fromString(
-      couponOracle.getAssetPrice(position.debtToken).toString(),
-    ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+    loanPosition.entryCollateralCurrencyPrice = collateralCurrencyPrice
+    loanPosition.averageCollateralCurrencyPrice = collateralCurrencyPrice
+    loanPosition.averageCollateralWithoutBorrowedCurrencyPrice =
+      collateralCurrencyPrice
+    loanPosition.entryDebtCurrencyPrice = debtCurrencyPrice
+    loanPosition.averageDebtCurrencyPrice = debtCurrencyPrice
     if (decodedOdosSwapEvent) {
       loanPosition.isLeveraged = true
     }
@@ -176,11 +176,24 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
     event.params.collateralAmount.equals(BigInt.zero()) &&
     event.params.debtAmount.equals(BigInt.zero())
   if (!shouldRemove) {
+    let borrowedCollateralAmountDelta = BigInt.zero()
+    if (
+      loanPosition.isLeveraged &&
+      decodedOdosSwapEvent &&
+      collateralAmountDelta.notEqual(BigInt.zero())
+    ) {
+      const data = decodedOdosSwapEvent.toTuple()
+      const inputAmount = data[1].toBigInt()
+      const amountOut = data[3].toBigInt()
+      if (collateralAmountDelta.gt(BigInt.zero())) {
+        borrowedCollateralAmountDelta = amountOut
+      } else {
+        borrowedCollateralAmountDelta = inputAmount.neg()
+      }
+    }
+
     if (collateralAmountDelta.gt(BigInt.zero())) {
       // adjust average collateral currency price
-      const collateralCurrencyPrice = BigDecimal.fromString(
-        couponOracle.getAssetPrice(position.collateralToken).toString(),
-      ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
       loanPosition.averageCollateralCurrencyPrice =
         loanPosition.averageCollateralCurrencyPrice
           .times(
@@ -200,11 +213,38 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
           )
     }
 
+    const collateralAmountDeltaWithoutBorrowed = collateralAmountDelta.minus(
+      borrowedCollateralAmountDelta,
+    )
+
+    if (collateralAmountDeltaWithoutBorrowed.gt(BigInt.zero())) {
+      const collateralAmountWithoutBorrowed =
+        loanPosition.collateralAmount.minus(
+          loanPosition.borrowedCollateralAmount,
+        )
+      loanPosition.averageCollateralWithoutBorrowedCurrencyPrice =
+        loanPosition.averageCollateralWithoutBorrowedCurrencyPrice
+          .times(
+            BigDecimal.fromString(collateralAmountWithoutBorrowed.toString()),
+          )
+          .plus(
+            collateralCurrencyPrice.times(
+              BigDecimal.fromString(
+                collateralAmountDeltaWithoutBorrowed.toString(),
+              ),
+            ),
+          )
+          .div(
+            BigDecimal.fromString(
+              collateralAmountWithoutBorrowed
+                .plus(collateralAmountDeltaWithoutBorrowed)
+                .toString(),
+            ),
+          )
+    }
+
     if (debtAmountDelta.gt(BigInt.zero())) {
       // adjust average debt currency price
-      const debtCurrencyPrice = BigDecimal.fromString(
-        couponOracle.getAssetPrice(position.debtToken).toString(),
-      ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
       loanPosition.averageDebtCurrencyPrice =
         loanPosition.averageDebtCurrencyPrice
           .times(BigDecimal.fromString(loanPosition.amount.toString()))
@@ -226,6 +266,8 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .concat('-')
       .concat(position.debtToken.toHexString())
     loanPosition.collateralAmount = position.collateralAmount
+    loanPosition.borrowedCollateralAmount =
+      loanPosition.borrowedCollateralAmount.plus(borrowedCollateralAmountDelta)
     loanPosition.principal = loanPosition.principal
       .plus(debtAmountDelta)
       .plus(soldAmount)
@@ -237,23 +279,6 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
       .underlyingToken()
       .toHexString()
     loanPosition.updatedAt = event.block.timestamp
-
-    if (
-      loanPosition.isLeveraged &&
-      decodedOdosSwapEvent &&
-      collateralAmountDelta.notEqual(BigInt.zero())
-    ) {
-      const data = decodedOdosSwapEvent.toTuple()
-      const inputAmount = data[1].toBigInt()
-      const amountOut = data[3].toBigInt()
-      if (collateralAmountDelta.gt(BigInt.zero())) {
-        loanPosition.borrowedCollateralAmount =
-          loanPosition.borrowedCollateralAmount.plus(amountOut)
-      } else {
-        loanPosition.borrowedCollateralAmount =
-          loanPosition.borrowedCollateralAmount.minus(inputAmount)
-      }
-    }
 
     loanPosition.save()
   }
@@ -324,16 +349,14 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
         loanPosition.entryCollateralCurrencyPrice
       leverageHistory.averageCollateralCurrencyPrice =
         loanPosition.averageCollateralCurrencyPrice
-      leverageHistory.closedCollateralCurrencyPrice = BigDecimal.fromString(
-        couponOracle.getAssetPrice(position.collateralToken).toString(),
-      ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+      leverageHistory.averageCollateralWithoutBorrowedCurrencyPrice =
+        loanPosition.averageCollateralWithoutBorrowedCurrencyPrice
+      leverageHistory.closedCollateralCurrencyPrice = collateralCurrencyPrice
       leverageHistory.entryDebtCurrencyPrice =
         loanPosition.entryDebtCurrencyPrice
       leverageHistory.averageDebtCurrencyPrice =
         loanPosition.averageDebtCurrencyPrice
-      leverageHistory.closedDebtCurrencyPrice = BigDecimal.fromString(
-        couponOracle.getAssetPrice(position.debtToken).toString(),
-      ).div(exponentToBigDecimal(BigInt.fromI32(priceDecimals)))
+      leverageHistory.closedDebtCurrencyPrice = debtCurrencyPrice
       leverageHistory.borrowedCollateralAmount =
         loanPosition.borrowedCollateralAmount
 
@@ -356,7 +379,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
           exponentToBigDecimal(BigInt.fromI32(debtDecimals)),
         ),
         leverageHistory.closedCollateralCurrencyPrice,
-        leverageHistory.averageCollateralCurrencyPrice,
+        leverageHistory.averageCollateralWithoutBorrowedCurrencyPrice,
         leverageHistory.closedDebtCurrencyPrice,
       )
 
@@ -371,7 +394,7 @@ export function handleUpdateLoanPosition(event: UpdatePosition): void {
           exponentToBigDecimal(BigInt.fromI32(debtDecimals)),
         ),
         leverageHistory.closedCollateralCurrencyPrice,
-        leverageHistory.averageCollateralCurrencyPrice,
+        leverageHistory.averageCollateralWithoutBorrowedCurrencyPrice,
         leverageHistory.closedDebtCurrencyPrice,
       )
 

@@ -73,6 +73,7 @@ type LoanPosition @entity {
   isLeveraged: Boolean!
   entryCollateralCurrencyPrice: BigDecimal!
   averageCollateralCurrencyPrice: BigDecimal!
+  averageCollateralWithoutBorrowedCurrencyPrice: BigDecimal!
   entryDebtCurrencyPrice: BigDecimal!
   averageDebtCurrencyPrice: BigDecimal!
   borrowedCollateralAmount: BigInt!
@@ -93,6 +94,7 @@ type LeverageHistory @entity {
   closedAt: BigInt!
   entryCollateralCurrencyPrice: BigDecimal!
   averageCollateralCurrencyPrice: BigDecimal!
+  averageCollateralWithoutBorrowedCurrencyPrice: BigDecimal!
   closedCollateralCurrencyPrice: BigDecimal!
   entryDebtCurrencyPrice: BigDecimal!
   averageDebtCurrencyPrice: BigDecimal!
